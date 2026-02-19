@@ -1,3 +1,4 @@
+//src/lib/db/client.ts
 import { openDB, IDBPDatabase } from "idb";
 
 const DB_NAME = "hinsete_seb_db";

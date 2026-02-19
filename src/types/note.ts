@@ -1,3 +1,4 @@
+//src/types/note.ts
 export interface Note {
   id: string;
   userId: string;

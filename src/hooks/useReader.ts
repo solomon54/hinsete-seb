@@ -1,44 +1,78 @@
+// src/hooks/useReader.ts
+
+import { ProgressRepository } from "@/lib/db/repository";
+import { checkClockSkew, isChapterUnlocked } from "@/lib/utils/date";
 import { useState, useEffect } from "react";
 import { useAuth } from "./useAuth";
-import { isChapterUnlocked, checkClockSkew } from "@/lib/utils/date";
 
 export function useReader(weekNumber: number) {
   const { user, loading: authLoading } = useAuth();
   const [status, setStatus] = useState<
     "loading" | "locked" | "unlocked" | "skewed"
   >("loading");
+  const [lockMessage, setLockMessage] = useState<string | null>(null);
   const [unlockDate, setUnlockDate] = useState<Date | null>(null);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      setStatus("locked");
-      return;
-    }
+    const evaluateAccess = async () => {
+      if (authLoading) return;
+      if (!user) {
+        setStatus("locked");
+        return;
+      }
 
-    // Baseline: Current time (In production, fetch this from a lightweight /api/time endpoint)
-    const serverTime = new Date().toISOString();
+      const serverTime = new Date().toISOString();
 
-    // 1. Check for Anti-Cheat (SRS-6.4)
-    if (checkClockSkew(serverTime)) {
-      setStatus("skewed");
-      return;
-    }
+      // 1. Anti-Cheat Check
+      if (checkClockSkew(serverTime)) {
+        setStatus("skewed");
+        setLockMessage("ሰዓትዎ ትክክል አይደለም። እባክዎ ወደ ትክክለኛው ሰዓት ይመልሱ።");
+        return;
+      }
 
-    // 2. Check Drip-Feed (SRS-4.2.1)
-    // weekNumber is 1-indexed from URL, we need 0-indexed for calculation
-    const weekIndex = weekNumber - 1;
-    const isUnlocked = isChapterUnlocked(user.joinDate, weekIndex, serverTime);
+      // 2. Time Check
+      const weekIndex = weekNumber - 1;
+      const timeUnlocked = isChapterUnlocked(
+        user.joinDate,
+        weekIndex,
+        serverTime
+      );
 
-    if (isUnlocked) {
+      if (!timeUnlocked) {
+        const date = new Date(user.joinDate);
+        date.setDate(date.getDate() + weekIndex * 7);
+        setUnlockDate(date);
+        setStatus("locked");
+        setLockMessage(
+          `ይህ ምዕራፍ ገና አልተከፈተም። በ ${date.toLocaleDateString("am-ET")} ይከፈታል።`
+        );
+        return;
+      }
+
+      // 3. Milestone Check (Hybrid Logic)
+      if (weekNumber > 1) {
+        const prevChapterId = `ch_${weekNumber - 1}`;
+        const prevProgress = await ProgressRepository.getProgress(
+          user.id,
+          prevChapterId
+        );
+
+        if (!prevProgress || !prevProgress.isCompleted) {
+          setStatus("locked");
+          setLockMessage(
+            `የቀደመውን ምዕራፍ (ምዕራፍ ${
+              weekNumber - 1
+            }) ተግባራዊ ልምምዶችን ሳያጠናቅቁ ወደዚህ ምዕራፍ ማለፍ አይቻልም።`
+          );
+          return;
+        }
+      }
+
       setStatus("unlocked");
-    } else {
-      const date = new Date(user.joinDate);
-      date.setDate(date.getDate() + weekIndex * 7);
-      setUnlockDate(date);
-      setStatus("locked");
-    }
+    };
+
+    evaluateAccess();
   }, [user, authLoading, weekNumber]);
 
-  return { status, unlockDate };
+  return { status, lockMessage, unlockDate };
 }
