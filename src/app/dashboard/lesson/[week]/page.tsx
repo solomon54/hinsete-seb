@@ -1,22 +1,62 @@
 //src/app/dashboard/lesson/[week]/page.tsx
 "use client";
-
 import { useParams } from "next/navigation";
 import { useReader } from "@/hooks/useReader";
 import { WaxSeal } from "@/app/components/dashboard/WaxSeal";
 import { Book } from "@/app/components/reader/Book";
 
-// Temporary mock data for the week's content
-const MOCK_PAGES = [
+// የተቀየረው የውሂብ አወቃቀር (type ተጨምሮበታል)
+const MOCK_PAGES: { content: string; type: "title" | "text" }[] = [
   {
-    content:
-      "In the beginning of the formation, the mind is like an unwritten parchment...",
+    type: "title",
+    content: `ምዕራፍ ፩: መሠረት\n"እኔ ማን ነኝ?"`,
   },
   {
-    content:
-      "Silence is the ink of the soul. Deepen your breath as you read these words.",
+    type: "text",
+    content: `"ራሱን የሚያውቅ ሰው ዓለምን ከሚያውቅ ሰው ይበልጣል" — ቅዱስ ይስሐቅ ሶርያዊ\n\nየዩኒቨርሲቲ ሕይወት እንደ አንድ ሰፊ ውቅያኖስ ነው። ወደዚህ ውቅያኖስ ከመግባትህ በፊት መጀመሪያ ልትመልሰው የሚገባህ መሠረታዊ ጥያቄ "እኔ ማን ነኝ?" የሚል ነው። ይህ ጥያቄ የመታወቂያ ቁጥርህን ወይም የትምህርት ክፍልህን የምትናገርበት ሳይሆን፣ በምድር ላይ ያለህን የክብር ልክና የሕልውና ዓላማ የምታውቅበት "የማንነት መስተዋት" ነው።`,
   },
-  { content: "The third pillar of Hinsete Seb is consistency over intensity." },
+  {
+    type: "text",
+    content: `፩.፩. የሰው ልጅ ክብር፦ በእግዚአብሔር አምሳል መፈጠር (Imago Dei)\n\nበዩኒቨርሲቲ ግቢ ውስጥ የምትጀምረው የመጀመሪያው ትልቅ ፈተና "የመመዘኛ መስፈርቶች" ፈተና ነው። አካባቢህ፣ ጓደኞችህ አልፎ ተርፎም የትምህርት ክፍሉ በውጤትህ፣ በምትለብሰው ልብስ ወይም በከተማ ልምድህ ሊመዝኑህ ይሞክራሉ።\n\nመለኮታዊው ንድፍ (The Divine Design)\n\n"በመልካችን እንደ ምሳሌአችን ሰውን እንፍጠር" (ዘፍ ፩፡፳፮) የሚለው ቃል፣ አንተ የዝግመተ ለውጥ ድንገተኛ ውጤት ሳትሆን፣ የታሰበብህ መለኮታዊ "ድንቅ ፍጥረት" መሆንህን ያረጋግጣል።`,
+  },
+  {
+    type: "text",
+    content: `ይህ "አምሳለ እግዚአብሔር" (Imago Dei) መሆን በአንተ ውስጥ ሦስት ታላላቅ መለኮታዊ አሻራዎችን አትሟል፦\n\n1. ለባዊነት (Intellect)፦ ከአእምሮ በላይ የሆነው፣ ረቂቅ ነገሮችን የመረዳትና የመመራመር ብቃት።\n2. ነባቢነት (Creative Word)፦ ሐሳብን የመግለጽና የመፍጠር ጥራት።\n3. ሕያውነት (Eternal Soul)፦ ከቁስ በላይ የሆነ፣ የማይሞት ማንነት።\n\nይህ የሚያሳየው፣ በአንተ ውስጥ ያለው "መለኮታዊ አሻራ" በአካልህና በአእምሮህ አሠራር ውስጥም ጭምር መኖሩን ነው።`,
+  },
+  {
+    type: "text",
+    content: `፩.፪. ራስን መመርመር (Self-Inventory)፦ ትላንትና ዛሬ\n\n"ሥር የሌለው ዛፍ ነፋስ ሲመጣ ይወድቃል፤ ትላንቱን የማያውቅ ትውልድም ነገን መቆጣጠር አይችልም።"\n\nሥርህ ምንድን ነው? በኦርቶዶክሳዊት ቤተክርስቲያን ጥላ ሥር ያገኘሃቸው እሴቶች—ታማኝነት፣ ጾም፣ ጸሎትና ትሕትና—በትምህርት ዓለም ውስጥ ለሚገጥሙህ ማዕበሎች ዋነኛ መልህቆችህ ናቸው። አባ ጊዮርጊስ ዘጋሥጫን አስብ። እርሱ በዕውቀት ጥልቀቱ ዓለምን ያስገረመው በዚያ ጥንታዊ ትውፊት ታንጾ ነው።`,
+  },
+  {
+    type: "text",
+    content: `ዛሬ፦ ወቅታዊው መስተዋት (The Present Mirror)\n\nራስን መመርመር ማለት ደካማ ጎንህን ብቻ መቁጠር ሳይሆን፣ እግዚአብሔር በአንተ ላይ ያኖረውን "ጸጋና ተሰጥኦ" መለየትም ጭምር ነው።\n\n• ኢንጂነር ከሆንክ፦ የፈረሰውን የመገንባት ጸጋ አለህ።\n• ሐኪም ከሆንክ፦ የታመመውን የመፈወስ ጸጋ አለህ።\n• መምህር ከሆንክ፦ ትውልድን የመቅረጽ ጸጋ አለህ።\n\nሳይንስም ሆነ ጥበብ ከእግዚአብሔር የሚሰጡ ስጦታዎች ናቸው። የጥበብ ሁሉ ምንጭ እርሱ ነውና።`,
+  },
+  {
+    type: "text",
+    content: `አእምሯዊ መታደስ (Neuroplasticity)፦ ሳይንስ አእምሯችን ልክ እንደ ፕላስቲክ ሊቀረጽና ሊታደስ (Rewire) እንደሚችል ይነግረናል። ቅዱስ ጳውሎስ "በልባችሁ መታደስ ተለወጡ" (ሮሜ ፲፪፡፪) የሚለው ትእዛዝ፣ በአንተ ውስጥ ያለውን ይህን ተፈጥሯዊ የመለወጥ አቅም እንድትጠቀምበት ነው።\n\nይህንን ምስል ዛሬ በአእምሮህ ካልሳልከው፣ ዩኒቨርሲቲ ሲያበቃ "ዲግሪ" እንጂ "ሰው" ይዘህ አትወጣም።`,
+  },
+  {
+    type: "text",
+    content: `፩.፬. የዲጂታል ስብዕና (Digital Integrity)\n\nበዲጂታል ዓለም ውስጥ የምታደርገው እያንዳንዱ እንቅስቃሴ የመንፈሳዊ ማንነትህ ነጸብራቅ ነው። ይህ "ዲጂታል አሻራህ" ለአፍታ ታይቶ የሚጠፋ ሳይሆን፣ ማንነትህን ለዓለም የሚመሰክር የሕይወት መዝገብህ ነው።\n\n፩.፭. የሞራል ኮምፓስ፦ ዕውቀት ያለ ሥነ-ምግባር\n\nሥነ-ምግባር የሌለው ዕውቀት አቅጣጫ እንደሌለውና ብሬክ እንደማይይዝ ፈጣን መኪና ነው፤ መዳረሻውም ወደማይቀረው ጥፋት ነው። "ዕውቀት ያለ ሕሊና ነፍስን ያጠፋል" — François Rabelaux`,
+  },
+  {
+    type: "text",
+    content: `📝 ተግባራዊ ልምምድ (Action Plan)
+    
+1. የማንነት ማስታወሻ (The Identity Audit)
+አንድ ነጭ ወረቀት ውሰድና ለሁለት እኩል ክፈለው።
+• በአንድ በኩል፦ "እግዚአብሔር በእኔ ላይ ያኖረው በጎ ነገር (ጸጋ እና ተሰጥኦ)"
+• በሌላ በኩል፦ "ሊለወጡ የሚገባቸው ድክመቶቼ (Shadows)"
+
+2. የ፲ አምስት ደቂቃ ዝምታ (Sacred Silence)
+በቀን ውስጥ ቢያንስ ለ15 ደቂቃ ስልክህን አጥፋ፣ ከጓደኞችህም ተለይተህ ብቻህን ሁን። በዚህ የዝምታ ሰዓት ራስህን እንዲህ ብለህ ጠይቅ፦
+"እኔ ማን ነኝ? አሁን የማደርጋቸው ነገሮች ወደ ዓላማዬ እየወሰዱኝ ነው?"
+
+3. የምስጋናና የራዕይ መዝገብ (The Mission Log)
+ዩኒቨርሲቲ ለመግባት የከፈልከውን መስዋዕትነትና እግዚአብሔር የረዳህን ሦስት ትልልቅ አጋጣሚዎች አስብና በምስጋና መዝግብ።
+
+"ወንሚሜ ሆይ! አንተ የንጉሥ ልጅ ነህ። ክብርህን አውቀህ፣ ሥርህን አጠንክረህ፣ ዛሬህን በቅንነት መልከህ፣ ነገህን በራዕይ ሳል።"`,
+  },
 ];
 
 export default function LessonPage() {
@@ -24,18 +64,17 @@ export default function LessonPage() {
   const weekNumber = parseInt(params.week as string);
   const { status, unlockDate } = useReader(weekNumber);
 
-  if (status === "loading")
-    return <div className="p-10 text-center">Opening Manuscript...</div>;
+  if (status === "loading") {
+    return (
+      <div className="p-10 text-center font-serif italic text-[#9b2d30]">
+        Opening Manuscript...
+      </div>
+    );
+  }
 
   if (status === "locked" && unlockDate) {
     return <WaxSeal unlockDate={unlockDate.toISOString()} />;
   }
 
-  return (
-    <div className="biranna-container flex items-center justify-center overflow-hidden">
-      <div className="w-full max-w-4xl p-12">
-        <Book pages={MOCK_PAGES} />
-      </div>
-    </div>
-  );
+  return <Book pages={MOCK_PAGES} />;
 }

@@ -1,26 +1,207 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg-parchment: #f4ece1;
+  --bg-parchment-dark: #e8e0d5;
+  --ink: #1a1a1a;
+  --cinnabar: #9b2d30;
+  --shadow-soft: rgba(0, 0, 0, 0.07);
+  --shadow-medium: rgba(0, 0, 0, 0.14);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ────────────────────────────────────────────────
+   Global & Immersion
+───────────────────────────────────────────────── */
+body {
+  margin: 0;
+  padding: 0;
+  background: #222;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  overflow: hidden;
+  height: 100dvh;
+}
+
+.biranna-viewport {
+  height: 100dvh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at center, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.55) 100%),
+    url('/assets/images/parchment-grain.png') center / cover;
+  perspective: 2200px;
+  overflow: hidden;
+}
+
+.book-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.book-spine {
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 2px;
+  background: rgba(0, 0, 0, 0.09);
+  box-shadow: 0 0 18px 8px rgba(0, 0, 0, 0.06);
+  transform: translateX(-50%);
+  z-index: 500;
+  pointer-events: none;
+}
+
+.page-surface {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-parchment);
+  background-image: url('/assets/images/parchment-grain.png');
+  background-size: cover;
+  box-shadow: inset 0 0 38px rgba(0, 0, 0, 0.04);
+  border: none;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* ────────────────────────────────────────────────
+   Page Content Layout
+───────────────────────────────────────────────── */
+.page-content-wrapper {
+  height: 100%;
+  width: 100%;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
+}
+
+/* Responsive padding progression */
+@media (min-width: 480px) {
+  .page-content-wrapper {
+    padding: 1.25rem;
   }
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+@media (min-width: 640px) {
+  .page-content-wrapper {
+    padding: 1.5rem 2rem;
+  }
 }
 
-/* 3D Utilities for Reader */
+@media (min-width: 768px) {
+  .page-content-wrapper {
+    padding: 2.5rem 3.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-content-wrapper {
+    padding: 3rem 4.5rem;
+  }
+}
+
+/* Extra small screens override */
+@media (max-width: 480px) {
+  .page-content-wrapper {
+    padding: 0.8rem 1rem;
+  }
+}
+
+/* ────────────────────────────────────────────────
+   Typography — mobile-first, readable
+───────────────────────────────────────────────── */
+.page-header {
+  font-weight: 700;
+  text-align: center;
+  color: var(--cinnabar);
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  font-family: 'Amiri', Georgia, serif;
+  white-space: pre-line;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  font-size: clamp(1.2rem, 6vw, 2rem);
+  min-height: 40px;
+}
+
+.page-text-column {
+  flex-grow: 1;
+  overflow-y: auto;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  color: var(--ink);
+  white-space: pre-line;
+  font-size: clamp(0.85rem, 3.8vw, 1.1rem);
+}
+
+/* Very small phones safety net */
+@media (max-width: 360px) {
+  .page-text-column {
+    font-size: 0.88rem;
+    line-height: 1.55;
+    letter-spacing: 0.008em;
+  }
+
+  .page-header {
+    font-size: 1.15rem;
+    line-height: 1.22;
+    margin-bottom: 0.75rem;
+  }
+
+  .page-number {
+    font-size: 0.7rem;
+    padding-top: 0.4rem;
+  }
+}
+
+/* Page number */
+.page-number {
+  font-size: 0.78rem;
+  opacity: 0.48;
+  font-style: italic;
+  text-align: center;
+  padding-top: 0.6rem;
+}
+
+/* ────────────────────────────────────────────────
+   Scrollbar styling
+───────────────────────────────────────────────── */
+.page-content-wrapper ::-webkit-scrollbar {
+  width: 4px;
+}
+
+.page-content-wrapper ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+}
+
+/* ────────────────────────────────────────────────
+   Mobile visual tweaks
+───────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .biranna-viewport {
+    perspective: 1400px;
+  }
+
+  .page-surface {
+    box-shadow: inset 0 0 55px rgba(0, 0, 0, 0.09);
+    transform: perspective(1100px) rotateX(1.4deg);
+  }
+}
+
+/* ────────────────────────────────────────────────
+   3D helpers
+───────────────────────────────────────────────── */
 @layer utilities {
   .preserve-3d {
     transform-style: preserve-3d;
@@ -28,5 +209,17 @@ body {
 
   .backface-hidden {
     backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
   }
+}
+
+/* ────────────────────────────────────────────────
+   Special case: title-only pages
+───────────────────────────────────────────────── */
+.page-header-only {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
