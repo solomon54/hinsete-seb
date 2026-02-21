@@ -32,6 +32,12 @@ const HistoryDrawer: FC<HistoryDrawerProps> = ({
 
       {/* Notes List */}
       <div className="flex-1 overflow-y-auto space-y-2">
+        {/* 💡 NEW NOTE BUTTON AT TOP OF LIST */}
+        <button
+          onClick={() => onSelect("NEW_NOTE")}
+          className="w-full mb-4 p-3 border-2 border-dashed border-[#9b2d30]/30 rounded-xl text-[#9b2d30] font-bold hover:bg-[#9b2d30]/5 transition">
+          + አዲስ ማስታወሻ ይጀምሩ
+        </button>
         {notes.length > 0 ? (
           notes.map((note) => (
             <div

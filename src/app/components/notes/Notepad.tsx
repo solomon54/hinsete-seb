@@ -24,7 +24,7 @@ import { NoteRepository } from "@/lib/db/repository";
 interface NotepadProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave?: (html: string) => void;
+  onSave?: (html: string, title?: string) => void;
   initialContent?: string;
   userId?: string;
   chapterId?: string;
@@ -33,14 +33,11 @@ interface NotepadProps {
   onGoToPage?: (pageIndex: number) => void;
 }
 
-// ─────────────────────────────────────────────
-// History Note Item (what we show in drawer)
-// ─────────────────────────────────────────────
 interface HistoryNoteItem {
   id: string;
   title: string;
   date: string;
-  pageIndex?: number; // used for jumping
+  pageIndex?: number;
   chapterId?: string;
 }
 
@@ -58,10 +55,16 @@ export default function Notepad({
   password,
   onGoToPage,
 }: NotepadProps) {
-  // ── Switchable Note State ───────────────────────────────
+  // ── Active Note State ───────────────────────────────
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
 
-  // ── Editor Setup ────────────────────────────────────────
+  // ── History Drawer State ────────────────────────────
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [historyNotes, setHistoryNotes] = useState<HistoryNoteItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [rawNotes, setRawNotes] = useState<any[]>([]); // full note objects for jumping
+
+  // ── Editor Setup ───────────────────────────────────
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -73,16 +76,12 @@ export default function Notepad({
       Underline,
       TextStyle,
       Color,
-      TextAlign.configure({
-        types: ["heading", "paragraph", "listItem"],
-      }),
+      TextAlign.configure({ types: ["heading", "paragraph", "listItem"] }),
       Link.configure({
         openOnClick: true,
         autolink: true,
         linkOnPaste: true,
-        HTMLAttributes: {
-          class: "text-[#9b2d30] underline cursor-pointer",
-        },
+        HTMLAttributes: { class: "text-[#9b2d30] underline cursor-pointer" },
       }),
       Placeholder.configure({
         placeholder: "የሕንጸት ማስታወሻዎን እዚህ ይጀምሩ...",
@@ -92,16 +91,16 @@ export default function Notepad({
     immediatelyRender: false,
   });
 
-  // ── Encrypted / Decrypted Content Management ────────────
-  const { content, saveNote, isLoading } = useNotes({
+  // ── Notes Hook: Encrypted / Decrypted Content ──────
+  const { content, title, setTitle, saveNote, isLoading } = useNotes({
     userId: userId || "guest_user",
     chapterId: chapterId || "unknown",
     pageIndex: pageIndex ?? 0,
     password: password || "fallback_pass",
-    noteId: activeNoteId, // Override with specific note ID if selected
+    noteId: activeNoteId, // load specific note if selected
   });
 
-  // Load decrypted content → editor
+  // ── Load Decrypted Content into Editor ─────────────
   useEffect(() => {
     if (!editor || content === undefined) return;
     if (editor.getHTML() !== content) {
@@ -111,19 +110,19 @@ export default function Notepad({
     }
   }, [content, editor]);
 
-  // ── Debounced Auto-Save (600ms) ─────────────────────────
+  // ── Debounced Auto-Save (600ms) ────────────────────
   const debouncedSave = useMemo(() => {
     let timer: NodeJS.Timeout | null = null;
 
-    const save = (html: string) => {
+    const save = (html: string, title: string) => {
       if (!html.trim() || html === "<p></p>") return;
-      saveNote(html); // → encrypted persistence
-      onSave(html); // → parent callback (plain text)
+      saveNote(html, title);
+      onSave(html, title);
     };
 
-    const debounced = (html: string) => {
+    const debounced = (html: string, title: string) => {
       if (timer) clearTimeout(timer);
-      timer = setTimeout(() => save(html.trim()), 600);
+      timer = setTimeout(() => save(html.trim(), title), 600);
     };
 
     debounced.cancel = () => {
@@ -135,20 +134,15 @@ export default function Notepad({
 
   useEffect(() => {
     if (!editor) return;
-    const handleUpdate = () => debouncedSave(editor.getHTML());
+    const handleUpdate = () => debouncedSave(editor.getHTML(), title);
     editor.on("update", handleUpdate);
     return () => {
       editor.off("update", handleUpdate);
       debouncedSave.cancel();
     };
-  }, [editor, debouncedSave]);
+  }, [editor, debouncedSave, title]);
 
-  // ── Note History (All user notes across chapters) ───────
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [historyNotes, setHistoryNotes] = useState<HistoryNoteItem[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [rawNotes, setRawNotes] = useState<any[]>([]); // keep full objects for jumping
-
+  // ── Note History Loading ───────────────────────────
   useEffect(() => {
     if (!isHistoryOpen || !userId) return;
 
@@ -191,7 +185,7 @@ export default function Notepad({
     };
   }, [isHistoryOpen, userId]);
 
-  // Close history drawer on outside click
+  // ── Handle Outside Click for History Drawer ────────
   const drawerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -199,14 +193,22 @@ export default function Notepad({
         setIsHistoryOpen(false);
       }
     };
-    if (isHistoryOpen) {
+    if (isHistoryOpen)
       document.addEventListener("mousedown", handleClickOutside);
-    }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isHistoryOpen]);
 
+  // ── Create New Note ───────────────────────────────
+  const handleCreateNew = () => {
+    setActiveNoteId(null); // reset current note
+    setTitle(""); // clear title
+    editor?.commands.setContent(""); // clear editor
+    setIsHistoryOpen(false);
+  };
+
   if (!editor) return null;
 
+  // ── Render ────────────────────────────────────────
   return (
     <AnimatePresence>
       {isOpen && (
@@ -248,7 +250,27 @@ export default function Notepad({
               </div>
             </div>
 
-            {/* History Sidebar (slides in from left) */}
+            {/* Title Input + New Note Button */}
+            <div className="px-6 py-2 bg-[#fdf8f2] border-b border-[#9b2d30]/10 flex items-center gap-4">
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => {
+                  const newTitle = e.target.value;
+                  setTitle(newTitle);
+                  saveNote(editor?.getHTML() || "", newTitle);
+                }}
+                placeholder="ማስታወሻ ርዕስ (ለምሳሌ፡ የጠዋት ጸሎት...)"
+                className="flex-1 bg-transparent border-none focus:ring-0 text-[#3d1c1d] font-bold placeholder:opacity-30 text-lg"
+              />
+              <button
+                onClick={handleCreateNew}
+                className="flex items-center gap-2 px-3 py-1.5 bg-[#9b2d30] text-white rounded-lg text-xs hover:bg-[#7f2428] transition shadow-md">
+                + አዲስ ማስታወሻ
+              </button>
+            </div>
+
+            {/* History Drawer */}
             <AnimatePresence>
               {isHistoryOpen && (
                 <motion.div
@@ -278,17 +300,10 @@ export default function Notepad({
                       notes={historyNotes}
                       onSelect={(selectedId) => {
                         const note = rawNotes.find((n) => n.id === selectedId);
-                        if (
-                          note &&
-                          typeof note.pageIndex === "number" &&
-                          onGoToPage
-                        ) {
-                          console.log(
-                            `Jumping to page ${note.pageIndex} from history`
-                          );
+                        if (note?.pageIndex !== undefined && onGoToPage) {
                           onGoToPage(note.pageIndex);
                         }
-                        setActiveNoteId(selectedId); // Switch to this note for editing
+                        setActiveNoteId(selectedId);
                         setIsHistoryOpen(false);
                       }}
                     />
@@ -297,9 +312,10 @@ export default function Notepad({
               )}
             </AnimatePresence>
 
-            {/* Toolbar + Editor Area */}
+            {/* Toolbar */}
             <Toolbar editor={editor} />
 
+            {/* Editor Area */}
             <div className="flex-1 overflow-y-auto px-6 sm:px-10 py-10 bg-[#fdf8f2] relative">
               <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[url('/assets/images/parchment-subtle.webp')] bg-repeat" />
               <div className="relative z-10 max-w-3xl mx-auto prose prose-[--tw-prose-body:#3d1c1d] prose-headings:text-[#3d1c1d] prose-headings:font-serif prose-p:leading-[1.85] prose-p:text-[1.08rem] prose-li:text-[1.08rem] prose-headings:tracking-tight focus:outline-none">
@@ -308,24 +324,18 @@ export default function Notepad({
             </div>
 
             {/* Footer */}
-            <div className="p-5 border-t border-[#9b2d30]/15 bg-gradient-to-t from-[#fdfaf7] to-[#fdf8f2] flex justify-end gap-4">
-              <button
-                onClick={onClose}
-                className="px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-medium transition">
-                ዝጋ
-              </button>
+            <div className="p-5 border-t border-[#9b2d30]/15 bg-linear-to-t from-[#fdfaf7] to-[#fdf8f2] flex justify-end gap-4">
               <button
                 onClick={() => {
                   const html = editor.getHTML().trim();
                   if (html && html !== "<p></p>") {
-                    // already auto-saved via debounce
-                    onClose();
+                    // onClose(); // already auto-saved
                   } else {
-                    onClose();
+                    // onClose();
                   }
                 }}
                 disabled={isLoading}
-                className="px-8 py-3 bg-[#9b2d30] hover:bg-[#7f2428] text-white rounded-xl font-medium shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2">
+                className="px-8 py-3 bg-[#9b2d30] hover:bg-[#7f2428] text-white rounded-xl font-medium shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95">
                 {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
                 መዝግብ
               </button>

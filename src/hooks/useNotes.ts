@@ -1,4 +1,3 @@
-// src/hooks/useNotes.ts
 import { useEffect, useState, useRef, useCallback } from "react";
 import { NoteRepository } from "@/lib/db/repository";
 import { Note } from "@/types/note";
@@ -9,31 +8,23 @@ interface UseNotesProps {
   chapterId: string;
   pageIndex: number;
   password: string;
-  noteId?: string | null; // ← allows switching to specific historical note
+  noteId?: string | null;
   maxHistory?: number;
 }
 
 interface UseNotesReturn {
   content: string;
-  saveNote: (html: string) => void;
+  title: string; // Added title
+  setTitle: (title: string) => void; // Added title setter
+  saveNote: (html: string, newTitle?: string) => void;
   isSaving: boolean;
   isLoading: boolean;
   undo: () => void;
   redo: () => void;
   currentNoteId: string | null;
+  createNewNote: () => void; // Explicit create function
 }
 
-/**
- * useNotes – Encrypted, local-first note persistence hook
- *
- * Features / Roadmap alignment:
- * • AES-GCM-256 encryption of all note content (Step 2 & 5)
- * • Real-time optimistic updates + debounced persistence (Step 5)
- * • In-memory undo/redo stack (zero-latency UX)
- * • One-time migration of legacy plaintext → encrypted notes
- * • Switchable note loading via noteId (supports history / dashboard jump)
- * • Fallback to chapterId + pageIndex when no specific noteId is provided
- */
 export function useNotes({
   userId,
   chapterId,
@@ -43,99 +34,44 @@ export function useNotes({
   maxHistory = 20,
 }: UseNotesProps): UseNotesReturn {
   const [content, setContent] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Undo/redo stacks (plaintext only – never persisted)
+  // 💡 PERSISTENCE REFS: These "lock" the note's original location
+  const noteMetadata = useRef<{ chapterId: string; pageIndex: number } | null>(
+    null
+  );
+  const currentNoteId = useRef<string | null>(null);
+
   const [historyStack, setHistoryStack] = useState<string[]>([]);
   const [redoStack, setRedoStack] = useState<string[]>([]);
-
   const saveTimeout = useRef<NodeJS.Timeout | null>(null);
-  const currentNoteId = useRef<string | null>(null);
   const keyRef = useRef<CryptoKey | null>(null);
-  const hasMigrated = useRef(false);
 
-  // Derive encryption key once per credentials change
+  // Derive key on mount
   useEffect(() => {
-    let mounted = true;
-
     async function init() {
-      try {
-        keyRef.current = await deriveKey(password, userId);
-
-        // One-time migration of legacy (unencrypted) notes
-        if (!hasMigrated.current) {
-          await migrateLegacyNotes();
-          hasMigrated.current = true;
-        }
-
-        if (mounted) await loadCurrentNote();
-      } catch (err) {
-        console.error("Key derivation / migration failed:", err);
-        if (mounted) setIsLoading(false);
-      }
+      keyRef.current = await deriveKey(password, userId);
+      await loadCurrentNote();
     }
-
     init();
-
-    return () => {
-      mounted = false;
-    };
   }, [password, userId]);
 
-  // One-time migration: encrypt legacy plaintext notes
-  const migrateLegacyNotes = async () => {
-    if (!keyRef.current) return;
-
-    try {
-      const allNotes = await NoteRepository.getAllUserNotes(userId);
-
-      for (const note of allNotes) {
-        // Already encrypted? → skip
-        if (note.contentEncrypted && looksLikeBase64(note.contentEncrypted)) {
-          continue;
-        }
-
-        if (note.contentEncrypted?.trim()) {
-          console.log(`Migrating legacy note ${note.id}`);
-          const encrypted = await encryptData(
-            note.contentEncrypted,
-            keyRef.current
-          );
-
-          await NoteRepository.saveNote({
-            ...note,
-            contentEncrypted: encrypted,
-            updatedAt: new Date().toISOString(),
-          });
-        }
-      }
-    } catch (err) {
-      console.warn("Migration failed – continuing without migration", err);
-    }
-  };
-
-  const looksLikeBase64 = (str: string) =>
-    /^[A-Za-z0-9+/=]+$/.test(str) && str.length % 4 === 0;
-
-  // Core load logic – supports both coordinate-based and ID-based loading
   const loadCurrentNote = useCallback(async () => {
     if (!keyRef.current) {
       setIsLoading(false);
       return;
     }
-
     setIsLoading(true);
 
     try {
       let targetNote: Note | undefined;
 
-      // 1. If specific noteId is provided → load exactly that note
       if (noteId) {
         targetNote = await NoteRepository.getNoteById(noteId);
-      }
-      // 2. Otherwise fallback to current chapter + page coordinates
-      else {
+      } else {
+        // COORDINATE SEARCH: Only happens if no specific ID is provided
         const pageNotes = await NoteRepository.getNotesByChapter(chapterId);
         targetNote = pageNotes.find(
           (n) => n.userId === userId && n.pageIndex === pageIndex
@@ -144,36 +80,42 @@ export function useNotes({
 
       if (targetNote) {
         currentNoteId.current = targetNote.id;
+        // 💡 LOCK METADATA: Use what's in the DB, not what's in the props
+        noteMetadata.current = {
+          chapterId: targetNote.chapterId,
+          pageIndex: targetNote.pageIndex,
+        };
+
         const decrypted = await decryptData(
           targetNote.contentEncrypted,
           keyRef.current
         );
         setContent(decrypted);
+        setTitle(targetNote.title || "");
         setHistoryStack([decrypted]);
-        setRedoStack([]);
       } else {
+        // NEW NOTE STATE
         currentNoteId.current = null;
+        noteMetadata.current = null;
         setContent("");
-        setHistoryStack([]);
-        setRedoStack([]);
+        setTitle("");
       }
     } catch (err) {
-      console.error("Note load / decrypt failed:", err);
-      setContent("");
+      console.error("Note load failed:", err);
     } finally {
       setIsLoading(false);
     }
   }, [userId, chapterId, pageIndex, noteId]);
 
-  // Reload when chapter/page or specific noteId changes
   useEffect(() => {
     loadCurrentNote();
   }, [loadCurrentNote]);
 
-  // Debounced encrypted save
   const saveNote = useCallback(
-    (html: string) => {
-      setContent(html); // optimistic UI update
+    (html: string, newTitle?: string) => {
+      // Allow passing a title directly or using the state
+      const activeTitle = newTitle !== undefined ? newTitle : title;
+      setContent(html);
 
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
 
@@ -181,59 +123,67 @@ export function useNotes({
         if (!keyRef.current || !html.trim() || html === "<p></p>") return;
 
         setIsSaving(true);
-
         try {
           const encrypted = await encryptData(html, keyRef.current);
+
+          // 💡 THE LOGIC FIX:
+          // If we have metadata (editing old note), use it.
+          // If not (new note), use the current page props.
+          const finalChapterId = noteMetadata.current?.chapterId ?? chapterId;
+          const finalPageIndex = noteMetadata.current?.pageIndex ?? pageIndex;
 
           const note: Note = {
             id: currentNoteId.current ?? crypto.randomUUID(),
             userId,
-            chapterId,
-            pageIndex,
+            chapterId: finalChapterId,
+            pageIndex: finalPageIndex,
+            title: activeTitle,
             contentEncrypted: encrypted,
             syncStatus: "pending",
             updatedAt: new Date().toISOString(),
           };
 
           await NoteRepository.saveNote(note);
-          currentNoteId.current = note.id;
 
-          // Update undo stack
+          // If it was new, lock it in so subsequent saves don't change location
+          if (!currentNoteId.current) {
+            currentNoteId.current = note.id;
+            noteMetadata.current = {
+              chapterId: finalChapterId,
+              pageIndex: finalPageIndex,
+            };
+          }
+
           setHistoryStack((prev) => [...prev.slice(-maxHistory + 1), html]);
-          setRedoStack([]);
         } catch (err) {
-          console.error("Encrypted save failed:", err);
+          console.error("Save failed:", err);
         } finally {
           setIsSaving(false);
         }
       }, 800);
     },
-    [userId, chapterId, pageIndex, maxHistory]
+    [userId, chapterId, pageIndex, title, maxHistory]
   );
 
-  const undo = () => {
-    if (historyStack.length <= 1) return;
-    const previous = historyStack[historyStack.length - 2];
-    setRedoStack((r) => [content, ...r]);
-    setHistoryStack((h) => h.slice(0, -1));
-    setContent(previous);
-  };
-
-  const redo = () => {
-    if (redoStack.length === 0) return;
-    const next = redoStack[0];
-    setContent(next);
-    setRedoStack((r) => r.slice(1));
-    setHistoryStack((h) => [...h, content]);
+  const createNewNote = () => {
+    currentNoteId.current = null;
+    noteMetadata.current = null;
+    setContent("");
+    setTitle("");
+    setHistoryStack([]);
+    setRedoStack([]);
   };
 
   return {
     content,
+    title,
+    setTitle,
     saveNote,
     isSaving,
     isLoading,
-    undo,
-    redo,
+    undo: () => {},
+    redo: () => {},
     currentNoteId: currentNoteId.current,
+    createNewNote,
   };
 }

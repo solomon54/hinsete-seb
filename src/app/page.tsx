@@ -263,11 +263,7 @@ export default function Dashboard() {
         password={user.id}
         chapterId="general"
         pageIndex={0}
-        onSave={(html) => console.log("General note saved:", html)}
-        onGoToPage={(idx) => {
-          console.log("History selected → page index:", idx);
-          // You could navigate here in the future
-        }}
+        onGoToPage={(idx) => {}}
       />
     </div>
   );
