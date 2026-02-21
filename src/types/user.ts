@@ -1,7 +1,10 @@
+// src/types/user.ts
 export interface User {
   id: string;
   email: string;
-  joinDate: string; // ISO 8601 string
+  name?: string;
+  hasAccessToWeek3?: boolean;
+  joinDate: string;
   role: "STUDENT" | "ADMIN";
   lastSyncTimestamp: string;
   version: number;

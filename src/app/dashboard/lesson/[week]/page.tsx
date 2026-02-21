@@ -1,11 +1,13 @@
+//src/app/dashboard/lesson/[week]/page.tsx
 "use client";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useReader } from "@/hooks/useReader";
 import { WaxSeal } from "@/app/components/dashboard/WaxSeal";
 import { Book } from "@/app/components/reader/Book";
+import Notepad from "@/app/components/notes/Notepad"; // Notepad ጨምር
+import { BookOpenText } from "lucide-react"; // ለ Notepad button
 
-// 1. Static Import Mapping (ይህ ስህተቱን ያስቀረዋል)
 import chapter1 from "@/lib/mock/chapter_1.json";
 import chapter2 from "@/lib/mock/chapter_2.json";
 import chapter3 from "@/lib/mock/chapter_3.json";
@@ -22,12 +24,21 @@ export default function LessonPage() {
   const { status, unlockDate } = useReader(weekNumber);
   const [chapterData, setChapterData] = useState<any>(null);
 
+  // 1. የገጽ ቁጥርን የሚይዝ State (Progress-ን ለመመለስ)
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isNotepadOpen, setIsNotepadOpen] = useState(false);
+
   useEffect(() => {
-    // ካርታው ውስጥ ካለ ዳታውን ሴት እናደርጋለን
     if (CHAPTERS[weekNumber]) {
       setChapterData(CHAPTERS[weekNumber]);
     }
   }, [weekNumber]);
+
+  // 2. ገጽ ሲቀየር ማስታወሻውም አብሮ እንዲቀየር
+  const handlePageChange = (index: number) => {
+    setCurrentPage(index);
+    // እዚህ ጋር ለወደፊቱ ProgressRepository.saveLastPageRead መጥራት ይቻላል
+  };
 
   if (status === "loading" || !chapterData) {
     return (
@@ -41,6 +52,24 @@ export default function LessonPage() {
     return <WaxSeal unlockDate={unlockDate.toISOString()} />;
   }
 
-  // chapterData አሁን በውስጡ .pages አለው
-  return <Book pages={chapterData.pages} chapterId={chapterData.chapterId} />;
+  return (
+    <div className="relative min-h-screen">
+      {/* Book ላይ handlePageChange ጨምር (ኮምፖነንቱ የሚቀበል ከሆነ) */}
+      <Book
+        pages={chapterData.pages}
+        chapterId={chapterData.chapterId}
+        onPageChange={handlePageChange}
+      />
+
+      {/* ገጹን እና ተጠቃሚውን በትክክል እናገናኝ */}
+      <Notepad
+        isOpen={isNotepadOpen}
+        onClose={() => setIsNotepadOpen(false)}
+        chapterId={chapterData.chapterId}
+        userId="guest_user" // በ useAuth() የሚመጣውን userId እዚህ ይተኩ
+        pageIndex={currentPage} // አሁን ዳታው በየገጹ ይለያያል!
+        password="user_password" // ተጠቃሚው የገባበት ፓስዎርድ
+      />
+    </div>
+  );
 }

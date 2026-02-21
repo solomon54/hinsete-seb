@@ -1,3 +1,4 @@
+//src/hooks/useAuth.ts
 import { useState, useEffect } from "react";
 import { getDB } from "@/lib/db/client";
 import { User } from "@/types/user";

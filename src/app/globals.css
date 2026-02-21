@@ -18,7 +18,7 @@ body {
   background: #222;
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
-  overflow: hidden;
+  overflow: auto;
   height: 100dvh;
 }
 
@@ -75,7 +75,7 @@ body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
 }
@@ -222,4 +222,121 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+/* Tiptap Lists styling */
+.prose ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+}
+
+.prose ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+}
+
+.prose a {
+  color: #9b2d30;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ────────────────────────────────────────────────
+   ProseMirror / Editor Content Styling
+───────────────────────────────────────────────── */
+
+/* Selection Color */
+.prose ::selection {
+  background-color: rgba(155, 45, 48, 0.2);
+  color: inherit;
+  /* keeps selected text readable */
+}
+
+/* Headings */
+.ProseMirror h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 1.2em;
+  margin-bottom: 0.6em;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 1.1em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 0.9em;
+  margin-bottom: 0.4em;
+}
+
+/* Paragraphs */
+.ProseMirror p {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1em;
+  text-align: justify;
+}
+
+/* Lists */
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1em;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1em;
+}
+
+/* Links */
+.ProseMirror a {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Responsive font sizes for mobile */
+@media (max-width: 640px) {
+  .ProseMirror h1 {
+    font-size: 1.5rem;
+  }
+
+  .ProseMirror h2 {
+    font-size: 1.25rem;
+  }
+
+  .ProseMirror h3 {
+    font-size: 1.125rem;
+  }
+
+  .ProseMirror h4 {
+    font-size: 1rem;
+  }
+
+  .ProseMirror p {
+    font-size: 0.95rem;
+  }
+
+  .ProseMirror ul,
+  .ProseMirror ol {
+    padding-left: 1.2rem;
+  }
 }

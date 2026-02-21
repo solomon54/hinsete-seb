@@ -1,12 +1,8 @@
-/**
- * Hinsete Seb Security Module
- * AES-GCM-256 Encryption for User Reflections (SRS-6.2-01)
- */
+// src/lib/utils/encryption.ts
 
-// Generates a random Initialization Vector (IV) for each encryption
-const generateIV = () => window.crypto.getRandomValues(new Uint8Array(12));
+const generateIV = (): Uint8Array =>
+  window.crypto.getRandomValues(new Uint8Array(12));
 
-// Derives a key from a password/secret (for local-first auth)
 export async function deriveKey(
   password: string,
   salt: string
@@ -24,7 +20,7 @@ export async function deriveKey(
     {
       name: "PBKDF2",
       salt: encoder.encode(salt),
-      iterations: 100000,
+      iterations: 100_000,
       hash: "SHA-256",
     },
     baseKey,
@@ -40,40 +36,52 @@ export async function encryptData(
 ): Promise<string> {
   const iv = generateIV();
   const encoder = new TextEncoder();
-  const encodedData = encoder.encode(text);
+  const encoded = encoder.encode(text);
 
   const encryptedBuffer = await window.crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
-    encodedData
+    encoded
   );
 
-  // Combine IV and Encrypted Data for storage
   const combined = new Uint8Array(iv.length + encryptedBuffer.byteLength);
   combined.set(iv);
   combined.set(new Uint8Array(encryptedBuffer), iv.length);
 
-  return btoa(String.fromCharCode(...combined)); // Convert to Base64 for storage
+  // ✅ Safe way to convert bytes to Base64 (handles Unicode/Amharic correctly)
+  return btoa(
+    Array.from(combined, (byte) => String.fromCharCode(byte)).join("")
+  );
 }
 
 export async function decryptData(
-  base64Data: string,
+  input: string,
   key: CryptoKey
 ): Promise<string> {
-  const combined = new Uint8Array(
-    atob(base64Data)
-      .split("")
-      .map((c) => c.charCodeAt(0))
-  );
+  if (!input?.trim()) return "";
 
-  const iv = combined.slice(0, 12);
-  const data = combined.slice(12);
+  try {
+    // ✅ Safe way to convert Base64 back to bytes
+    const binaryStr = atob(input);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
 
-  const decryptedBuffer = await window.crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    key,
-    data
-  );
+    if (bytes.length < 28) return input;
 
-  return new TextDecoder().decode(decryptedBuffer);
+    const iv = bytes.slice(0, 12);
+    const ciphertext = bytes.slice(12);
+
+    const decryptedBuffer = await window.crypto.subtle.decrypt(
+      { name: "AES-GCM", iv },
+      key,
+      ciphertext
+    );
+
+    return new TextDecoder("utf-8").decode(decryptedBuffer);
+  } catch (err: any) {
+    console.warn("Decryption skipped (Legacy or Key mismatch):", err.message);
+    return input; // Never return empty string on failure; return the input to avoid data loss
+  }
 }

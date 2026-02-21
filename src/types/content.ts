@@ -1,3 +1,4 @@
+//src/types/content.ts
 export interface ContentPage {
   pageNumber: number;
   bodyText: string;

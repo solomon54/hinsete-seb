@@ -1,10 +1,13 @@
-//src/types/note.ts
+// src/types/note.ts
 export interface Note {
   id: string;
   userId: string;
   chapterId: string;
   pageIndex: number;
-  contentEncrypted: string; // AES-GCM-256 cipher text
+  contentEncrypted: string;
+  title?: string;
+  history?: string[];
   syncStatus: "synced" | "pending";
-  updatedAt: string; // ISO 8601 for LWW resolution
+  createdAt?: string;
+  updatedAt: string;
 }
