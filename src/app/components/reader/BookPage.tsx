@@ -1,10 +1,11 @@
+//src/app/components/reader/BookPage.tsx
 "use client";
 
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { ProgressRepository } from "@/lib/db/repository";
 import { Progress } from "@/types/progress";
-import { useEffect, useState, useRef } from "react";
 import { User } from "@/types/user";
 
 interface ContentBlock {
@@ -15,7 +16,6 @@ interface ContentBlock {
   url?: string;
 }
 
-// 1. Add 'user' to the Interface
 interface PageProps {
   sheetIndex: number;
   currentSheet: number;
@@ -28,9 +28,10 @@ interface PageProps {
   onProgressUpdate: () => void;
   totalChapterActions: number;
   user: User | null;
+  onNext: () => void;
+  onPrev: () => void;
 }
 
-// 2. Add 'user' to the Destructuring
 export const BookPage = ({
   sheetIndex,
   currentSheet,
@@ -43,52 +44,33 @@ export const BookPage = ({
   onProgressUpdate,
   totalChapterActions,
   user,
+  onNext,
+  onPrev,
 }: PageProps) => {
-  // ──────────────────────────────────────────────────────────
-  // 1. Optimistic State with Protection against Overwrites
-  // ──────────────────────────────────────────────────────────
   const [optimisticActions, setOptimisticActions] = useState<string[]>(
     currentProgress?.completedActions || []
   );
 
-  // Sync only when the database version actually changes to prevent flickering
   useEffect(() => {
     if (currentProgress?.completedActions) {
       const dbActions = currentProgress.completedActions;
-      setOptimisticActions((currentLocal) => {
-        // If local matches DB, don't trigger a re-render
+      setOptimisticActions((current) => {
         if (
-          JSON.stringify(currentLocal.sort()) ===
+          JSON.stringify(current.sort()) ===
           JSON.stringify([...dbActions].sort())
         ) {
-          return currentLocal;
+          return current;
         }
         return dbActions;
       });
     }
   }, [currentProgress?.completedActions]);
 
-  // ──────────────────────────────────────────────────────────
-  // 2. Toggle Logic with Full Rollback & Logging
-  // ──────────────────────────────────────────────────────────
-  // Inside BookPage.tsx
-  useEffect(() => {
-    console.log("DEBUG: BookPage received user prop:", user?.id || "NULL");
-  }, [user]);
-
   const handleActionToggle = async (actionId: string) => {
-    if (!user) {
-      console.warn("Toggle ignored: No user found.");
-      return;
-    }
-
-    console.log(
-      `[Action] Toggling ID: ${actionId} | Total in Chapter: ${totalChapterActions}`
-    );
+    if (!user) return;
 
     const totalActions = totalChapterActions || 1;
 
-    // 1️⃣ Optimistic update (UI changes immediately)
     setOptimisticActions((prev) =>
       prev.includes(actionId)
         ? prev.filter((id) => id !== actionId)
@@ -96,20 +78,14 @@ export const BookPage = ({
     );
 
     try {
-      // 2️⃣ Sync to IndexedDB
       await ProgressRepository.toggleAction(
         user.id,
         chapterId,
         actionId,
         totalActions
       );
-
-      // 3️⃣ Tell parent to refresh currentProgress
       onProgressUpdate?.();
-    } catch (err) {
-      console.error("Critical Sync Failure:", err);
-
-      // 4️⃣ Rollback on error (Reverse the UI state)
+    } catch {
       setOptimisticActions((prev) =>
         prev.includes(actionId)
           ? prev.filter((id) => id !== actionId)
@@ -118,21 +94,12 @@ export const BookPage = ({
     }
   };
 
-  // ──────────────────────────────────────────────────────────
-  // 3. Logic & Z-Index
-  // ──────────────────────────────────────────────────────────
   const isFlipped = sheetIndex < currentSheet;
   const isCurrent = sheetIndex === currentSheet;
-
-  // Ensure visible pages are ALWAYS interactive
   const isActive = isCurrent || isFlipped;
 
-  // High Z-Index to stay above Book navigation overlays
-  const zIndex = isFlipped ? 20000 + sheetIndex : 30000 - sheetIndex;
+  const zIndex = isFlipped ? 10 + sheetIndex : 100 - sheetIndex;
 
-  // ──────────────────────────────────────────────────────────
-  // 4. Content Renderer
-  // ──────────────────────────────────────────────────────────
   const renderContent = (blocks: ContentBlock[]) => {
     return blocks.map((block, idx) => {
       const content = block.content || "";
@@ -170,34 +137,40 @@ export const BookPage = ({
             </div>
           );
 
-        case "action_plan":
+        case "action_plan": {
           const isChecked = optimisticActions.includes(block.id || "");
           return (
             <div
               key={block.id || idx}
-              onClick={() => block.id && handleActionToggle(block.id)}
-              className={`my-3 p-3 border border-dashed rounded-lg transition-all cursor-pointer hover:bg-[#9b2d30]/5
+              onClick={(e) => {
+                e.stopPropagation();
+                if (block.id) handleActionToggle(block.id);
+              }}
+              className={`my-3 p-3 border border-dashed rounded-lg transition-all cursor-pointer select-none
                 ${
                   isChecked
-                    ? "bg-green-100 border-green-500"
-                    : "bg-white/40 border-[#9b2d30]/30"
+                    ? "bg-green-50/80 border-green-500/60"
+                    : "bg-white/60 border-[#9b2d30]/30 hover:bg-[#9b2d30]/5"
                 }`}>
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 pointer-events-none">
                 <input
                   type="checkbox"
-                  className="mt-1 w-4 h-4 accent-[#9b2d30]"
+                  className="mt-1 w-4 h-4 accent-[#9b2d30] pointer-events-none"
                   checked={isChecked}
-                  readOnly // Controlled by the parent div's onClick
+                  readOnly
                 />
-                <span className="text-[11px] md:text-xs font-medium leading-tight">
+                <span className="text-[13px] md:text-sm leading-tight">
                   {content}
                 </span>
                 {isChecked && (
-                  <span className="text-green-600 font-bold ml-auto">✔</span>
+                  <span className="text-green-700 ml-auto text-sm font-bold">
+                    ✓
+                  </span>
                 )}
               </div>
             </div>
           );
+        }
 
         default:
           const parts = content.split(/(\*\*.*?\*\*)/g);
@@ -222,6 +195,8 @@ export const BookPage = ({
 
   return (
     <motion.div
+      drag="x"
+      dragPropagation={false}
       className={`absolute top-0 h-full preserve-3d shadow-2xl ${
         isDesktop ? "left-1/2 w-1/2" : "left-0 w-full"
       }`}
@@ -230,14 +205,42 @@ export const BookPage = ({
         zIndex,
         pointerEvents: isActive ? "auto" : "none",
       }}
+      dragConstraints={{ left: 0, right: 0 }}
+      onDragEnd={(e, info) => {
+        const threshold = 50;
+        if (info.offset.x > threshold) onPrev();
+        else if (info.offset.x < -threshold) onNext();
+      }}
       animate={{ rotateY: isFlipped ? -180 : 0 }}
       transition={{ duration: 0.9, ease: [0.645, 0.045, 0.355, 1] }}
       onAnimationComplete={onFlipComplete}>
       {/* Front Page */}
       <div className="page-surface backface-hidden absolute inset-0 overflow-hidden bg-[#fdf8f2]">
+        {!isDesktop && isCurrent && (
+          <div className="absolute inset-0 pointer-events-none z-[3] flex">
+            <div
+              className="w-[18%] h-full pointer-events-auto touch-none"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onPrev();
+              }}
+            />
+            <div className="flex-1 h-full" />
+            <div
+              className="w-[18%] h-full pointer-events-auto touch-none"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onNext();
+              }}
+            />
+          </div>
+        )}
+
         <div className="relative flex h-full flex-col p-6 md:p-10">
           {front && (
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar z-10">
               {renderContent(front.blocks)}
             </div>
           )}
