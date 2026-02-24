@@ -208,6 +208,23 @@ export default function Notepad({
 
   if (!editor) return null;
 
+  // ── Delete Note ───────────────────────────────
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await NoteRepository.deleteNote(noteId);
+
+      // Update the local list so it disappears instantly
+      setHistoryNotes((prev) => prev.filter((n) => n.id !== noteId));
+
+      // If we are currently editing the deleted note, reset to a new one
+      if (activeNoteId === noteId) {
+        handleCreateNew();
+      }
+    } catch (err) {
+      console.error("Failed to delete note:", err);
+    }
+  };
+
   // ── Render ────────────────────────────────────────
   return (
     <AnimatePresence>
@@ -219,7 +236,7 @@ export default function Notepad({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998]"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-9998"
           />
 
           {/* Main Notepad Drawer */}
@@ -228,9 +245,9 @@ export default function Notepad({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 240 }}
-            className="fixed inset-x-0 bottom-0 z-[9999] bg-[#fdf8f2] max-h-[94vh] rounded-t-3xl flex flex-col shadow-2xl border-t-4 border-[#9b2d30]/80">
+            className="fixed inset-x-0 bottom-0 z-9999 bg-[#fdf8f2] max-h-[94vh] rounded-t-3xl flex flex-col shadow-2xl border-t-4 border-[#9b2d30]/80">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#9b2d30]/20 bg-gradient-to-b from-[#fdfaf7] to-[#fdf8f2]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#9b2d30]/20 bg-linear-to-b from-[#fdfaf7] to-[#fdf8f2]">
               <h2 className="text-xs font-semibold text-[#3d1c1d] flex items-center gap-3">
                 <BookOpenText size={22} className="text-[#9b2d30]" />
                 የሕንጸት ማስታወሻ
@@ -278,7 +295,7 @@ export default function Notepad({
                   animate={{ x: 0 }}
                   exit={{ x: "-100%" }}
                   transition={{ duration: 0.28, ease: "easeOut" }}
-                  className="absolute inset-y-0 left-0 w-5/6 sm:w-96 bg-[#fdfaf7] shadow-2xl z-[10000] flex flex-col border-r border-[#9b2d30]/15 rounded-r-2xl overflow-hidden"
+                  className="absolute inset-y-0 left-0 w-5/6 sm:w-96 bg-[#fdfaf7] shadow-2xl z-10000 flex flex-col border-r border-[#9b2d30]/15 rounded-r-2xl overflow-hidden"
                   ref={drawerRef}>
                   <div className="p-5 border-b border-[#9b2d30]/10 bg-[#fdf8f2]">
                     <h3 className="text-lg font-semibold text-[#3d1c1d]">
@@ -306,6 +323,8 @@ export default function Notepad({
                         setActiveNoteId(selectedId);
                         setIsHistoryOpen(false);
                       }}
+                      onDelete={handleDeleteNote}
+                      activeNoteId={activeNoteId}
                     />
                   )}
                 </motion.div>
