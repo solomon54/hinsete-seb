@@ -127,6 +127,15 @@ export const ProgressRepository = {
   },
 
   /**
+   * Get ALL progress records for a specific user
+   */
+  async getAllProgress(userId: string): Promise<Progress[]> {
+    const db = await getDB();
+    const all = await db.getAll("progress");
+    return all.filter((p) => p.userId === userId);
+  },
+
+  /**
    * Toggle completion of a single action item
    * Automatically updates chapter completion status
    */

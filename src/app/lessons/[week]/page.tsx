@@ -1,4 +1,4 @@
-//src/app/dashboard/lesson/[week]/page.tsx
+//src/app/lessons/[week]/page.tsx
 "use client";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,9 +8,9 @@ import { Book } from "@/app/components/reader/Book";
 import Notepad from "@/app/components/notes/Notepad"; // Notepad ጨምር
 import { BookOpenText } from "lucide-react"; // ለ Notepad button
 
-import chapter1 from "@/lib/mock/chapter_1.json";
-import chapter2 from "@/lib/mock/chapter_2.json";
-import chapter3 from "@/lib/mock/chapter_3.json";
+import chapter1 from "@/lib/contents/chapter_1.json";
+import chapter2 from "@/lib/contents/chapter_2.json";
+import chapter3 from "@/lib/contents/chapter_3.json";
 
 const CHAPTERS: Record<number, any> = {
   1: chapter1,
