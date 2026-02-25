@@ -92,6 +92,9 @@ export default function ContentSections({
 
   // ── Refined Unlock Logic using utilities ───────────────────────────
   const isUnlocked = (index: number): boolean => {
+    // 👑 OWNER MASTER KEY: If you are the owner, everything is unlocked
+    if (user?.role === "OWNER") return true;
+
     if (!userJoinDate) return index === 0;
     return isChapterUnlocked(userJoinDate, index, serverNow);
   };

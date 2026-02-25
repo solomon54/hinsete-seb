@@ -18,14 +18,13 @@ export const metadata: Metadata = {
   title: "ሕንጸተ ሰብእ (Hinsete Seb)",
   description: "A digital manuscript for academic and spiritual excellence",
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="am" className="scroll-smooth">
+    <html lang="am" className="scroll-smooth" data-scroll-behavior="smooth">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#fdfaf1] text-[#3d1c1d]`}>
         <main className="min-h-screen relative">{children}</main>

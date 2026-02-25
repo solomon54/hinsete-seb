@@ -22,12 +22,23 @@ export function useReader(weekNumber: number) {
         return;
       }
 
-      // Safety 2: Handle malformed joinDate to prevent crash
-      const joinDateBase = user.joinDate || user.created_at; // Fallback to created_at
+      /**
+       * 👑 OWNER BYPASS (The Master Key)
+       * If the user is the OWNER, we ignore all time and milestone restrictions.
+       */
+      if (user.role === "OWNER") {
+        setStatus("unlocked");
+        setUnlockDate(null);
+        setLockMessage(null);
+        return;
+      }
+
+      // --- REGULAR USER LOGIC BELOW ---
+
+      const joinDateBase = user.joinDate || user.created_at;
       const parsedJoinDate = new Date(joinDateBase);
 
       if (isNaN(parsedJoinDate.getTime())) {
-        console.error("Critical: Invalid User Join Date", joinDateBase);
         setStatus("locked");
         setLockMessage("የመግቢያ ቀን ስህተት ተገኝቷል። እባክዎ ድጋፍ ያግኙ።");
         return;
@@ -43,8 +54,7 @@ export function useReader(weekNumber: number) {
         return;
       }
 
-      // 2. Milestone Check (The "No Bypass" Guard)
-      // Users MUST finish previous week before even checking the time for the next
+      // 2. Milestone Check
       if (weekNumber > 1) {
         const prevChapterId = `ch_${weekNumber - 1}`;
         const prevProgress = await ProgressRepository.getProgress(
@@ -54,18 +64,13 @@ export function useReader(weekNumber: number) {
 
         if (!prevProgress || !prevProgress.isCompleted) {
           setStatus("locked");
-          setLockMessage(
-            `ምዕራፍ ${
-              weekNumber - 1
-            } ገና አልተጠናቀቀም። የቀደመውን ምዕራፍ ተግባራት ሳይጨርሱ ወደዚህ ማለፍ አይቻልም።`
-          );
-          // Set unlockDate to null here so the UI doesn't try to show a timer
+          setLockMessage(`ምዕራፍ ${weekNumber - 1} ገና አልተጠናቀቀም።`);
           setUnlockDate(null);
           return;
         }
       }
 
-      // 3. Time Check (Week-by-Week drip feed)
+      // 3. Time Check
       const timeUnlocked = isChapterUnlocked(
         parsedJoinDate.toISOString(),
         weekIndex,
@@ -75,14 +80,8 @@ export function useReader(weekNumber: number) {
       if (!timeUnlocked) {
         const date = new Date(parsedJoinDate);
         date.setDate(date.getDate() + weekIndex * 7);
-
         setUnlockDate(date);
         setStatus("locked");
-        setLockMessage(
-          `ይህ ምዕራፍ በ ${date.toLocaleDateString(
-            "am-ET"
-          )} ይከፈታል። እስከዚያው ያለፉትን ምዕራፎች ይከልሱ።`
-        );
         return;
       }
 
