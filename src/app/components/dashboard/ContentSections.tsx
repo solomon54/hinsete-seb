@@ -157,14 +157,14 @@ export default function ContentSections({
                     e.stopPropagation();
                     triggerCelebration();
                   }}
-                  className="absolute -right-1.5 -top-2.5 rotate-12 bg-[#9b2d30] text-white text-[9px] font-black px-1 py-0.5 rounded shadow-lg z-10 cursor-pointer active:scale-95">
+                  className="absolute -right-1.5 -top-2.5 rotate-12 bg-[#9b2d30] text-white text-[12px] font-black px-1 py-0.5 rounded shadow-lg z-10 cursor-pointer active:scale-95">
                   MASTERED 🎉
                 </div>
               )}
 
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0 ${
+                  className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-lg shrink-0 ${
                     unlocked
                       ? "bg-[#9b2d30]/10 text-[#9b2d30]"
                       : "bg-[#9b2d30]/60 text-white"
