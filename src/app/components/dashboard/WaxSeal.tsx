@@ -36,7 +36,7 @@ export const WaxSeal = ({ unlockDate }: WaxSealProps) => {
       <div className="mt-8 space-y-5 max-w-[300px]">
         <div className="space-y-1">
           <h2 className="text-[#3d1c1d] text-2xl font-serif font-black tracking-tight uppercase">
-            ይህ ምዕራፍ ታሽጓል
+            ይህ ምዕራፍ ተቆልፏል🔒
           </h2>
           <div className="w-10 h-0.5 bg-[#9b2d30] mx-auto rounded-full opacity-40" />
         </div>
@@ -53,7 +53,7 @@ export const WaxSeal = ({ unlockDate }: WaxSealProps) => {
             </p>
           </div>
 
-          <p className="text-[#3d1c1d]/40 text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-1">
+          <p className="text-[#3d1c1d]/70 text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-1">
             ይከፈታል ⏱
           </p>
         </div>

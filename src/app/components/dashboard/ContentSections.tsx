@@ -303,6 +303,12 @@ export default function ContentSections({
         {concepts.map((conc, idx) => (
           <Link key={idx} href={`/lessons/${conc.chNum}?page=${conc.pgNum}`}>
             <div className="bg-[#fdfaf1] px-4 py-5 rounded-2xl border border-[#9b2d30]/20 shadow-sm flex items-center justify-between group active:scale-[0.97] transition-transform">
+              <div className="w-10 h-10 mr-2 rounded-full bg-[#9b2d30]/10 flex items-center justify-center shrink-0">
+                <Bookmark
+                  size={18}
+                  className="text-[#9b2d30]/50 group-hover:text-[#9b2d30]"
+                />
+              </div>
               <div className="flex-1 pr-3">
                 <h4 className="font-bold text-[14.5px] text-[#3d1c1d] group-hover:text-[#9b2d30] transition-colors leading-snug">
                   {conc.content}
@@ -312,12 +318,6 @@ export default function ContentSections({
                     ከሳምንት {conc.chNum} የተወሰደ መሠረታዊ ሐሳብ
                   </span>
                 </div>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-[#9b2d30]/10 flex items-center justify-center shrink-0">
-                <Bookmark
-                  size={18}
-                  className="text-[#9b2d30]/50 group-hover:text-[#9b2d30]"
-                />
               </div>
             </div>
           </Link>

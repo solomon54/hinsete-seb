@@ -1,0 +1,10 @@
+1. Final Manual Step for You
+Once you run the script and sign in with your account for the first time, run this command to grant yourself the OWNER role:
+
+SQL
+UPDATE public.profiles 
+SET role = 'OWNER' 
+WHERE email = 'your-actual-email@gmail.com';
+
+
+2. modify th wisdom.jeson!
