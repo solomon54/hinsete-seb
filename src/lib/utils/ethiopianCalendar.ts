@@ -1,0 +1,72 @@
+// src/lib/utils/ethiopianCalendar.ts
+
+const ETHIOPIAN_EPOCH = 1723856;
+
+// ---------- Gregorian → Julian Day ----------
+function gregorianToJDN(date: Date): number {
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
+
+  const a = Math.floor((14 - month) / 12);
+  const y = year + 4800 - a;
+  const m = month + 12 * a - 3;
+
+  return (
+    day +
+    Math.floor((153 * m + 2) / 5) +
+    365 * y +
+    Math.floor(y / 4) -
+    Math.floor(y / 100) +
+    Math.floor(y / 400) -
+    32045
+  );
+}
+
+// ---------- Julian Day → Ethiopian ----------
+function jdnToEthiopian(jdn: number) {
+  const r = jdn - ETHIOPIAN_EPOCH;
+
+  const year = Math.floor((4 * r + 1463) / 1461);
+
+  const yearStart = ETHIOPIAN_EPOCH + 365 * (year - 1) + Math.floor(year / 4);
+
+  const dayOfYear = jdn - yearStart + 1;
+
+  const month = Math.floor((dayOfYear - 1) / 30) + 1;
+  const day = ((dayOfYear - 1) % 30) + 1;
+
+  return { year, month, day };
+}
+
+export function convertToEthiopian(date: Date) {
+  const jdn = gregorianToJDN(date);
+  return jdnToEthiopian(jdn);
+}
+
+// ---------- Labels ----------
+export const ETHIOPIAN_MONTHS = [
+  "መስከረም",
+  "ጥቅምት",
+  "ኅዳር",
+  "ታኅሣሥ",
+  "ጥር",
+  "የካቲት",
+  "መጋቢት",
+  "ሚያዝያ",
+  "ግንቦት",
+  "ሰኔ",
+  "ሐምሌ",
+  "ነሐሴ",
+  "ጳጉሜ",
+];
+
+export const ETHIOPIAN_WEEKDAYS = [
+  "እሑድ",
+  "ሰኞ",
+  "ማክሰኞ",
+  "ረቡዕ",
+  "ሐሙስ",
+  "ዓርብ",
+  "ቅዳሜ",
+];

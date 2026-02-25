@@ -105,7 +105,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#f4ece1] pb-24">
       <WisdomHeader />
-      <div className="p-6 max-w-5xl mx-auto flex justify-between items-center gap-4">
+      <div className="p-6 max-w-7xl mx-auto flex justify-between items-center gap-4">
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-[#3d1c1d]">
             ሰላም፣ {user.name}
