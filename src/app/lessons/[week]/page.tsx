@@ -66,12 +66,14 @@ export default function LessonPage() {
   const chapterData = useMemo(() => CHAPTERS[weekNumber], [weekNumber]);
 
   // Auth Guard
+  // src/app/lessons/[week]/page.tsx
+
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push(`/auth?callbackUrl=${encodeURIComponent(pathname)}`);
+    if (!authLoading && user === null) {
+      console.log("No user found, redirecting to auth...");
+      router.replace(`/auth?callbackUrl=${encodeURIComponent(pathname)}`);
     }
   }, [user, authLoading, router, pathname]);
-
   const handlePageChange = (index: number) => {
     setCurrentPage(index);
   };

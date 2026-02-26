@@ -188,7 +188,7 @@ export default function Dashboard() {
           chapters={chapters}
           chapterStats={chapterStats}
           searchQuery={searchQuery}
-          userJoinDate={user?.joinDate || user?.created_at}
+          userJoinDate={user ? user.joinDate || user.created_at : null}
         />
       </main>
 

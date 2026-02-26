@@ -1,11 +1,16 @@
 // src/hooks/useReader.ts
 import { ProgressRepository } from "@/lib/db/repository";
-import { checkClockSkew, isChapterUnlocked } from "@/lib/utils/date";
+import {
+  checkClockSkew,
+  isChapterUnlocked,
+  getChapterUnlockDate,
+} from "@/lib/utils/date";
 import { useState, useEffect } from "react";
 import { useAuth } from "./useAuth";
 
 export function useReader(weekNumber: number) {
   const { user, loading: authLoading } = useAuth();
+
   const [status, setStatus] = useState<
     "loading" | "locked" | "unlocked" | "skewed"
   >("loading");
@@ -16,15 +21,16 @@ export function useReader(weekNumber: number) {
     const evaluateAccess = async () => {
       if (authLoading) return;
 
-      // Safety 1: No user = No access
+      // Safety 1: No user = No access (unchanged)
       if (!user) {
         setStatus("locked");
+        setLockMessage(null);
+        setUnlockDate(null);
         return;
       }
 
       /**
-       * 👑 OWNER BYPASS (The Master Key)
-       * If the user is the OWNER, we ignore all time and milestone restrictions.
+       * 👑 OWNER BYPASS (Master Key) – unchanged
        */
       if (user.role === "OWNER") {
         setStatus("unlocked");
@@ -36,25 +42,27 @@ export function useReader(weekNumber: number) {
       // --- REGULAR USER LOGIC BELOW ---
 
       const joinDateBase = user.joinDate || user.created_at;
-      const parsedJoinDate = new Date(joinDateBase);
 
+      // Original validation (kept exactly)
+      const parsedJoinDate = new Date(joinDateBase);
       if (isNaN(parsedJoinDate.getTime())) {
         setStatus("locked");
         setLockMessage("የመግቢያ ቀን ስህተት ተገኝቷል። እባክዎ ድጋፍ ያግኙ።");
+        setUnlockDate(null);
         return;
       }
 
       const serverTime = new Date().toISOString();
-      const weekIndex = weekNumber - 1;
 
-      // 1. Clock Check (Anti-Cheat)
+      // 1. Clock Check (Anti-Cheat) – unchanged
       if (checkClockSkew(serverTime)) {
         setStatus("skewed");
         setLockMessage("ሰዓትዎ ትክክል አይደለም። እባክዎ ወደ ትክክለኛው ሰዓት ይመልሱ።");
+        setUnlockDate(null);
         return;
       }
 
-      // 2. Milestone Check
+      // 2. Milestone Check (prev chapter must be completed) – unchanged
       if (weekNumber > 1) {
         const prevChapterId = `ch_${weekNumber - 1}`;
         const prevProgress = await ProgressRepository.getProgress(
@@ -70,23 +78,27 @@ export function useReader(weekNumber: number) {
         }
       }
 
-      // 3. Time Check
+      // 3. Time Check – FIXED & ROBUST (uses utilities directly)
+      // Pass real weekNumber (1, 2, 3...) – no more double subtraction!
       const timeUnlocked = isChapterUnlocked(
-        parsedJoinDate.toISOString(),
-        weekIndex,
+        joinDateBase, // raw string (utilities handle parsing safely)
+        weekNumber,
         serverTime
       );
 
       if (!timeUnlocked) {
-        const date = new Date(parsedJoinDate);
-        date.setDate(date.getDate() + weekIndex * 7);
-        setUnlockDate(date);
+        // Use the same robust utility used everywhere else
+        const unlockIso = getChapterUnlockDate(joinDateBase, weekNumber);
+        setUnlockDate(new Date(unlockIso));
         setStatus("locked");
+        setLockMessage(null); // clear any previous message
         return;
       }
 
+      // Success path
       setStatus("unlocked");
       setUnlockDate(null);
+      setLockMessage(null);
     };
 
     evaluateAccess();

@@ -1,4 +1,3 @@
-//src/app/components/dashboard/ContentSections.tsx
 // src/app/components/dashboard/ContentSections.tsx
 "use client";
 
@@ -24,10 +23,10 @@ import {
 
 interface ContentSectionsProps {
   activeTab: string;
-  chapters: any[];
-  chapterStats: any[];
+  chapters: any[]; // Full chapter data (contains .chapterNumber)
+  chapterStats: any[]; // Display stats (contains .chapterNumber, .id, .title, .percent)
   searchQuery: string;
-  userJoinDate: string;
+  userJoinDate: string | null | undefined;
 }
 
 export default function ContentSections({
@@ -39,8 +38,8 @@ export default function ContentSections({
 }: ContentSectionsProps) {
   const { user } = useAuth();
 
-  // ── Clock Skew & Server Time Reference ─────────────────────────────
-  const [serverNow] = useState(new Date().toISOString());
+  // ── Clock Skew & Server Time Reference (snapshot at mount for consistency) ──
+  const [serverNow] = useState<string>(() => new Date().toISOString());
   const [isClockWrong, setIsClockWrong] = useState(false);
   const [inspectingChapterIndex, setInspectingChapterIndex] = useState<
     number | null
@@ -48,11 +47,16 @@ export default function ContentSections({
 
   const [completedActions, setCompletedActions] = useState<string[]>([]);
 
+  // Clock skew detection (robust against invalid serverNow)
   useEffect(() => {
+    if (!serverNow) {
+      setIsClockWrong(true);
+      return;
+    }
     setIsClockWrong(checkClockSkew(serverNow));
   }, [serverNow]);
 
-  // ── Celebration ─────────────────────────────────────────────────────
+  // ── Celebration (unchanged) ─────────────────────────────────────────────
   const triggerCelebration = useCallback(() => {
     confetti({
       particleCount: 160,
@@ -72,7 +76,7 @@ export default function ContentSections({
     }, 160);
   }, []);
 
-  // ── Load completed actions for Activities tab ───────────────────────
+  // ── Load completed actions for Activities tab (unchanged) ───────────────
   useEffect(() => {
     if (!user || activeTab !== "activities") return;
 
@@ -90,26 +94,43 @@ export default function ContentSections({
     loadAllActions();
   }, [user, activeTab]);
 
-  // ── Refined Unlock Logic using utilities ───────────────────────────
-  const isUnlocked = (index: number): boolean => {
-    // 👑 OWNER MASTER KEY: If you are the owner, everything is unlocked
+  // ── ROBUST UNLOCK LOGIC (uses real chapterNumber from data, never array index) ──
+  // Inside src/app/components/dashboard/ContentSections.tsx
+
+  // ── ROBUST UNLOCK LOGIC ──
+  const isUnlocked = (chapterNumber: number | undefined | null): boolean => {
     if (user?.role === "OWNER") return true;
 
-    if (!userJoinDate) return index === 0;
-    return isChapterUnlocked(userJoinDate, index, serverNow);
+    // GUEST LOGIC: If no userJoinDate, use serverNow as the starting point
+    const effectiveStartDate = userJoinDate || serverNow;
+
+    if (typeof chapterNumber !== "number" || chapterNumber < 1) return false;
+
+    return isChapterUnlocked(effectiveStartDate, chapterNumber, serverNow);
   };
 
-  const getUnlockDate = (chapterIndex: number): string => {
-    return getChapterUnlockDate(userJoinDate, chapterIndex);
+  const getUnlockDate = (chapterNumber: number | undefined | null): string => {
+    // GUEST LOGIC: If no userJoinDate, use serverNow as the starting point
+    const effectiveStartDate = userJoinDate || serverNow;
+
+    if (typeof chapterNumber !== "number" || chapterNumber < 1) {
+      return serverNow;
+    }
+
+    // This will now correctly add 7 or 14 days to "Today" for guests
+    return getChapterUnlockDate(effectiveStartDate, chapterNumber);
   };
 
-  const unlockedChapters = chapters.filter((_, i) => isUnlocked(i));
+  // Correctly filtered unlocked chapters using real chapterNumber
+  const unlockedChapters = chapters.filter((ch) =>
+    isUnlocked(ch?.chapterNumber)
+  );
 
-  // ── CHAPTERS TAB ────────────────────────────────────────────────────
+  // ── CHAPTERS TAB ────────────────────────────────────────────────────────
   if (activeTab === "chapters") {
     return (
       <div className="flex flex-col gap-4 pb-28 px-1 sm:px-4">
-        {/* Wax Seal Modal */}
+        {/* Wax Seal Modal for locked chapters */}
         {inspectingChapterIndex !== null && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-3">
             <div className="relative w-full max-w-[340px] bg-[#fdfaf1] rounded-3xl overflow-hidden shadow-2xl border border-[#9b2d30]/20">
@@ -139,9 +160,11 @@ export default function ContentSections({
           </div>
         )}
 
-        {chapterStats.map((ch, i) => {
-          const unlocked = isUnlocked(i);
-          const isMastered = unlocked && ch.percent === 100;
+        {chapterStats.map((ch) => {
+          // ROBUST: use real chapterNumber from data
+          const chapterNum = ch?.chapterNumber;
+          const unlocked = isUnlocked(chapterNum);
+          const isMastered = unlocked && ch?.percent === 100;
 
           const card = (
             <div
@@ -151,7 +174,9 @@ export default function ContentSections({
                   : "bg-[#f8f0e8]/80 border-dashed border-[#9b2d30]/25 opacity-85 cursor-help"
               }`}
               onClick={
-                !unlocked ? () => setInspectingChapterIndex(i) : undefined
+                !unlocked
+                  ? () => setInspectingChapterIndex(chapterNum) // now stores real chapterNumber
+                  : undefined
               }>
               {isMastered && (
                 <div
@@ -172,7 +197,7 @@ export default function ContentSections({
                       ? "bg-[#9b2d30]/10 text-[#9b2d30]"
                       : "bg-[#9b2d30]/60 text-white"
                   }`}>
-                  {unlocked ? ch.chapterNumber : <Lock size={18} />}
+                  {unlocked ? chapterNum : <Lock size={18} />}
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -180,14 +205,14 @@ export default function ContentSections({
                     className={`font-bold leading-tight text-[15px] ${
                       unlocked ? "text-[#3d1c1d]" : "text-[#3d1c1d]/60"
                     }`}>
-                    {ch.title}
+                    {ch?.title}
                   </h3>
 
                   {unlocked && (
                     <div className="w-full bg-[#3d1c1d]/8 h-1.5 rounded-full mt-2 overflow-hidden">
                       <div
                         className="bg-[#9b2d30] h-full rounded-full transition-all duration-1000"
-                        style={{ width: `${ch.percent}%` }}
+                        style={{ width: `${ch?.percent ?? 0}%` }}
                       />
                     </div>
                   )}
@@ -201,43 +226,46 @@ export default function ContentSections({
           );
 
           return unlocked ? (
-            <Link key={ch.id} href={`/lessons/${ch.chapterNumber}`}>
+            <Link key={ch?.id} href={`/lessons/${chapterNum}`}>
               {card}
             </Link>
           ) : (
-            <div key={ch.id}>{card}</div>
+            <div key={ch?.id}>{card}</div>
           );
         })}
       </div>
     );
   }
 
-  // ── ACTIVITIES TAB ──────────────────────────────────────────────────
+  // ── ACTIVITIES TAB (uses correctly filtered unlockedChapters) ───────────
   if (activeTab === "activities") {
-    const activities = unlockedChapters.flatMap((ch) =>
-      ch.pages.flatMap(
-        (p: { blocks: any[]; pageNumber: any }) =>
-          p.blocks
-            ?.filter(
-              (b: any) =>
-                b.type === "action_plan" &&
-                b.content.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .map((b: any) => ({
-              ...b,
-              chNum: ch.chapterNumber,
-              pgNum: p.pageNumber,
-            })) || []
-      )
+    const activities = unlockedChapters.flatMap(
+      (ch) =>
+        ch?.pages?.flatMap(
+          (p: { blocks?: any[]; pageNumber?: any }) =>
+            p?.blocks
+              ?.filter(
+                (b: any) =>
+                  b?.type === "action_plan" &&
+                  b?.content?.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .map((b: any) => ({
+                ...b,
+                chNum: ch?.chapterNumber,
+                pgNum: p?.pageNumber,
+              })) || []
+        ) || []
     );
 
     return (
       <div className="flex flex-col gap-4 pb-28 px-1">
         {activities.length > 0 ? (
           activities.map((act, idx) => {
-            const isDone = completedActions.includes(act.id);
+            const isDone = completedActions.includes(act?.id);
             return (
-              <Link key={idx} href={`/lessons/${act.chNum}?page=${act.pgNum}`}>
+              <Link
+                key={idx}
+                href={`/lessons/${act?.chNum}?page=${act?.pgNum}`}>
                 <div
                   className={`group flex flex-col gap-2.5 rounded-2xl border transition-all shadow-sm active:scale-[0.97] p-4 ${
                     isDone
@@ -252,7 +280,7 @@ export default function ContentSections({
                         <Circle size={22} className="text-[#9b2d30]/40" />
                       )}
                       <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-[#9b2d30]/10 text-[#9b2d30] uppercase">
-                        ሳምንት {act.chNum} • ገጽ {act.pgNum}
+                        ሳምንት {act?.chNum} • ገጽ {act?.pgNum}
                       </span>
                     </div>
 
@@ -267,7 +295,7 @@ export default function ContentSections({
                   </div>
 
                   <p className="text-[14.5px] leading-relaxed text-[#3d1c1d] font-medium">
-                    {act.content}
+                    {act?.content}
                   </p>
                 </div>
               </Link>
@@ -282,29 +310,30 @@ export default function ContentSections({
     );
   }
 
-  // ── CONCEPTS TAB ────────────────────────────────────────────────────
+  // ── CONCEPTS TAB (uses correctly filtered unlockedChapters) ─────────────
   if (activeTab === "concepts") {
     const concepts = unlockedChapters
-      .flatMap((ch) =>
-        ch.pages.flatMap(
-          (p: { blocks: any[]; pageNumber: any }) =>
-            p.blocks
-              ?.filter((b: any) => b.type === "subtitle")
-              .map((b: any) => ({
-                ...b,
-                chNum: ch.chapterNumber,
-                pgNum: p.pageNumber,
-              })) || []
-        )
+      .flatMap(
+        (ch) =>
+          ch?.pages?.flatMap(
+            (p: { blocks?: any[]; pageNumber?: any }) =>
+              p?.blocks
+                ?.filter((b: any) => b?.type === "subtitle")
+                .map((b: any) => ({
+                  ...b,
+                  chNum: ch?.chapterNumber,
+                  pgNum: p?.pageNumber,
+                })) || []
+          ) || []
       )
       .filter((c) =>
-        c.content.toLowerCase().includes(searchQuery.toLowerCase())
+        c?.content?.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
     return (
       <div className="flex flex-col gap-4 pb-28 px-1">
         {concepts.map((conc, idx) => (
-          <Link key={idx} href={`/lessons/${conc.chNum}?page=${conc.pgNum}`}>
+          <Link key={idx} href={`/lessons/${conc?.chNum}?page=${conc?.pgNum}`}>
             <div className="bg-[#fdfaf1] px-4 py-5 rounded-2xl border border-[#9b2d30]/20 shadow-sm flex items-center justify-between group active:scale-[0.97] transition-transform">
               <div className="w-10 h-10 mr-2 rounded-full bg-[#9b2d30]/10 flex items-center justify-center shrink-0">
                 <Bookmark
@@ -314,11 +343,11 @@ export default function ContentSections({
               </div>
               <div className="flex-1 pr-3">
                 <h4 className="font-bold text-[14.5px] text-[#3d1c1d] group-hover:text-[#9b2d30] transition-colors leading-snug">
-                  {conc.content}
+                  {conc?.content}
                 </h4>
                 <div className="mt-1.5">
                   <span className="text-[10px] text-[#9b2d30]/70 font-semibold uppercase tracking-wide">
-                    ከሳምንት {conc.chNum} የተወሰደ መሠረታዊ ሐሳብ
+                    ከሳምንት {conc?.chNum} የተወሰደ መሠረታዊ ሐሳብ
                   </span>
                 </div>
               </div>

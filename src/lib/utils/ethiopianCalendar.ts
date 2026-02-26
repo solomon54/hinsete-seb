@@ -25,16 +25,16 @@ function gregorianToJDN(date: Date): number {
 
 // ---------- Julian Day → Ethiopian ----------
 function jdnToEthiopian(jdn: number) {
-  const r = jdn - ETHIOPIAN_EPOCH;
+  const r = (jdn - ETHIOPIAN_EPOCH) % 1461;
+  const n = (r % 365) + 365 * Math.floor(r / 1460);
 
-  const year = Math.floor((4 * r + 1463) / 1461);
+  const year =
+    4 * Math.floor((jdn - ETHIOPIAN_EPOCH) / 1461) +
+    Math.floor(r / 365) -
+    Math.floor(r / 1460);
 
-  const yearStart = ETHIOPIAN_EPOCH + 365 * (year - 1) + Math.floor(year / 4);
-
-  const dayOfYear = jdn - yearStart + 1;
-
-  const month = Math.floor((dayOfYear - 1) / 30) + 1;
-  const day = ((dayOfYear - 1) % 30) + 1;
+  const month = Math.floor(n / 30) + 1;
+  const day = (n % 30) + 1;
 
   return { year, month, day };
 }
