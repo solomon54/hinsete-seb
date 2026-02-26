@@ -117,7 +117,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#f4ece1] pb-24 relative">
       {/* 1. Global Navigation Avatar - Placed in a container to align with content */}
       <div className="max-w-7xl mx-auto px-6 relative">
-        <div className="absolute right-3 top-3 z-[100]">
+        <div className="absolute right-3 top-3 z-[1000]">
           <UserNav />
         </div>
       </div>
