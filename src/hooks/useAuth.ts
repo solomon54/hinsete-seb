@@ -3,67 +3,71 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/db/browser-client";
 import { getDB } from "@/lib/db/client";
 
+// Move client creation outside to ensure a single instance/lock
+const supabase = createClient();
+
 export function useAuth() {
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
-    async function getInitialSession() {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+    let mounted = true;
 
-        if (session?.user) {
-          // ── NEW: Fetch profile data (role, joinDate) ──
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role, joinDate")
-            .eq("id", session.user.id)
-            .single();
-
-          // Merge auth user with profile data
-          const fullUser = { ...session.user, ...profile };
-
-          setUser(fullUser);
-          const db = await getDB();
-          await db.put("users", { ...fullUser, id: session.user.id });
+    async function syncUser(session: any) {
+      if (!session?.user) {
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
         }
-      } catch (err) {
-        console.error("Auth sync error:", err);
-      } finally {
-        setLoading(false);
+        return;
       }
 
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (session?.user) {
-          // ── NEW: Fetch profile data on state change ──
-          const { data: profile, error } = await supabase
-            .from("profiles")
-            .select("role, joinDate")
-            .eq("id", session.user.id)
-            .single();
+      try {
+        // Fetch profile with double quotes for camelCase
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select('role, "joinDate", name, "avatarUrl"')
+          .eq("id", session.user.id)
+          .single();
 
-          const fullUser = { ...session.user, ...profile };
+        const fullUser = {
+          ...session.user,
+          ...profile,
+          display_name: profile?.name || session.user.email?.split("@")[0],
+          avatarUrl: profile?.avatarUrl, // Match your schema
+        };
 
+        if (mounted) {
           setUser(fullUser);
-          const db = await getDB();
-          await db.put("users", { ...fullUser, id: session.user.id });
-        } else if (event === "SIGNED_OUT") {
-          setUser(null);
-          const db = await getDB();
-          await db.clear("users");
+          setLoading(false);
         }
-        setLoading(false);
-      });
 
-      return () => subscription.unsubscribe();
+        // Persist to local DB
+        const db = await getDB();
+        await db.put("users", { ...fullUser, id: session.user.id });
+      } catch (err) {
+        console.error("Sync error:", err);
+        if (mounted) setLoading(false);
+      }
     }
 
-    getInitialSession();
+    // 1. Get initial session immediately
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted && session) syncUser(session);
+      else if (mounted && !session) setLoading(false);
+    });
+
+    // 2. Listen for changes (this handles logins/logouts)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) syncUser(session);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { user, loading };
