@@ -16,8 +16,6 @@ export function useAuth() {
 
     async function syncUser(session: any) {
       const sessionUser = session?.user;
-
-      // If no user, or it's the same user we just processed, stop.
       if (!sessionUser) {
         if (mounted) {
           setUser(null);
@@ -25,24 +23,41 @@ export function useAuth() {
         }
         return;
       }
+
       if (sessionUser.id === lastProcessedUserId) return;
       lastProcessedUserId = sessionUser.id;
 
       try {
-        const { data: profile, error } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select('role, "joinDate", name, "avatarUrl"')
           .eq("id", sessionUser.id)
           .single();
 
-        if (error) throw error;
-
-        const fullUser = {
+        let fullUser = {
           ...sessionUser,
-          ...profile,
-          display_name: profile?.name || sessionUser.email?.split("@")[0],
-          avatarUrl: profile?.avatarUrl,
+          display_name: sessionUser.email?.split("@")[0] || "User",
+          avatarUrl: null,
+          role: "STUDENT", // fallback
+          joinDate: null,
         };
+
+        if (profileError) {
+          console.warn(
+            "Profile fetch failed (likely new user or RLS):",
+            profileError.message
+          );
+          // Continue with basic user data — don't crash
+        } else if (profile) {
+          fullUser = {
+            ...fullUser,
+            ...profile,
+            display_name: profile.name || fullUser.display_name,
+            avatarUrl: profile.avatarUrl,
+            role: profile.role || fullUser.role,
+            joinDate: profile.joinDate,
+          };
+        }
 
         if (mounted) {
           setUser(fullUser);
@@ -51,9 +66,17 @@ export function useAuth() {
 
         const db = await getDB();
         await db.put("users", { ...fullUser, id: sessionUser.id });
-      } catch (err) {
-        console.error("Sync error:", err);
-        if (mounted) setLoading(false);
+      } catch (err: any) {
+        console.error("Critical sync error:", err);
+        // Fallback: set basic user so login doesn't break
+        if (mounted) {
+          setUser({
+            ...sessionUser,
+            display_name: sessionUser.email?.split("@")[0] || "User",
+            role: "STUDENT",
+          });
+          setLoading(false);
+        }
       }
     }
 

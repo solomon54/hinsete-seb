@@ -43,7 +43,24 @@ export function convertToEthiopian(date: Date) {
   const jdn = gregorianToJDN(date);
   return jdnToEthiopian(jdn);
 }
+// ---------- Formatting ----------
 
+export function formatAmharicDate(date: Date, includeTime = false): string {
+  // Use the proper Ethiopian conversion
+  const { year, month, day } = convertToEthiopian(date);
+  const monthName = ETHIOPIAN_MONTHS[month - 1]; // months are 1-based
+  const datePart = `${day}, ${monthName} ${year}`;
+
+  if (!includeTime) return datePart;
+
+  const time = date.toLocaleTimeString("am-ET", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  return `${datePart} ${time}`;
+}
 // ---------- Labels ----------
 export const ETHIOPIAN_MONTHS = [
   "መስከረም",
