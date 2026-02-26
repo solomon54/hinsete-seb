@@ -91,8 +91,8 @@ export function UserNav() {
       group-hover:scale-110 group-active:scale-100
       ${
         isOwner
-          ? "bg-violet-600 ring-1 ring-violet-600/60"
-          : "bg-emerald-600 ring-1 ring-emerald-00/60"
+          ? "bg-violet-600 ring-1 ring-violet-600"
+          : "bg-emerald-600 ring-1 ring-emerald-600"
       }
     `}
         aria-hidden="true"

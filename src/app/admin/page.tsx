@@ -327,7 +327,7 @@ export default function AdminDashboard() {
                     alt="User avatar"
                   />
                 ) : (
-                  selectedUser.name?.charAt(0)?.toUpperCase() || "?"
+                  selectedUser.name?.charAt(0)?.toUpperCase() || <User />
                 )}
               </div>
 

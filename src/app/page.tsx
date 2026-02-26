@@ -11,7 +11,7 @@ import TabSwitcher from "@/app/components/dashboard/TabSwitcher";
 import ContentSections from "@/app/components/dashboard/ContentSections";
 import Notepad from "@/app/components/notes/Notepad";
 import { UserNav } from "@/app/components/profile/UserNav";
-import { Search, PlayCircle, LogIn, BookOpenText } from "lucide-react";
+import { Search, PlayCircle, LogIn, BookOpenText, User } from "lucide-react";
 
 import ch1 from "@/lib/contents/chapter_1.json";
 import ch2 from "@/lib/contents/chapter_2.json";
@@ -116,10 +116,17 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#f4ece1] pb-24 relative">
       {/* 1. Global Navigation Avatar - Placed in a container to align with content */}
-      <div className="max-w-7xl mx-auto px-6 relative">
-        <div className="absolute right-3 top-3 z-[1000]">
+      <div className="absolute right-3 top-3 z-[1000]">
+        {user ? (
           <UserNav />
-        </div>
+        ) : (
+          <button
+            onClick={() => router.push("/auth")}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-[#9b2d30]/10 text-[#9b2d30] hover:bg-[#9b2d30]/20 transition-all"
+            aria-label="Login / Sign up">
+            <User size={20} />
+          </button>
+        )}
       </div>
 
       <WisdomHeader />
@@ -128,7 +135,7 @@ export default function Dashboard() {
       <div className="px-6 py-4 max-w-7xl mx-auto">
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1 pt-2">
-            <h1 className="text-2xl md:text-3xl font-bold text-[#3d1c1d]">
+            <h1 className="text-lg md:text-xl font-bold text-[#3d1c1d]">
               {user
                 ? `ሰላም፣ ${
                     user.user_metadata?.full_name || user.email?.split("@")[0]
