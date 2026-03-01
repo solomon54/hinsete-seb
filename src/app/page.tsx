@@ -13,11 +13,15 @@ import Notepad from "@/app/components/notes/Notepad";
 import { UserNav } from "@/app/components/profile/UserNav";
 import { Search, PlayCircle, LogIn, BookOpenText, User } from "lucide-react";
 
+import ch0 from "@/lib/contents/introduction.json";
 import ch1 from "@/lib/contents/chapter_1.json";
 import ch2 from "@/lib/contents/chapter_2.json";
 import ch3 from "@/lib/contents/chapter_3.json";
+import ch4 from "@/lib/contents/chapter_4.json";
+import ch5 from "@/lib/contents/chapter_5.json";
+import ch6 from "@/lib/contents/glossary.json";
 
-const chapters = [ch1, ch2, ch3];
+const chapters = [ch0, ch1, ch2, ch3, ch4, ch5, ch6];
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();

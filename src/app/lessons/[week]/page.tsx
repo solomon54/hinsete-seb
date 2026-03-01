@@ -10,9 +10,13 @@ import { Book } from "@/app/components/reader/Book";
 import Notepad from "@/app/components/notes/Notepad";
 
 // Content Imports
+import chapter0 from "@/lib/contents/introduction.json";
 import chapter1 from "@/lib/contents/chapter_1.json";
 import chapter2 from "@/lib/contents/chapter_2.json";
 import chapter3 from "@/lib/contents/chapter_3.json";
+import chapter4 from "@/lib/contents/chapter_4.json";
+import chapter5 from "@/lib/contents/chapter_5.json";
+import chapter6 from "@/lib/contents/glossary.json";
 
 // --- STRICT TYPES FOR YOUR BLOCK SCHEMA ---
 export type BlockType =
@@ -46,9 +50,13 @@ export interface ChapterData {
 
 // Map the imports with double-casting to ensure TS respects the Schema
 const CHAPTERS: Record<number, ChapterData> = {
+  0: chapter0 as unknown as ChapterData,
   1: chapter1 as unknown as ChapterData,
   2: chapter2 as unknown as ChapterData,
   3: chapter3 as unknown as ChapterData,
+  4: chapter4 as unknown as ChapterData,
+  5: chapter5 as unknown as ChapterData,
+  6: chapter6 as unknown as ChapterData,
 };
 
 export default function LessonPage() {

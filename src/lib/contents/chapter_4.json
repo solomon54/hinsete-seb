@@ -1,0 +1,25 @@
+{
+  "chapterId": "ch_4",
+  "chapterNumber": 4,
+  "title": "የአእምሮ ሕንጸት - 'የላቀ ውጤት' (Academic Excellence)",
+  "pages": [
+    {
+      "pageNumber": 1,
+      "blocks": [
+        {
+          "type": "header",
+          "content": "ምዕራፍ ፬፦ የአእምሮ ሕንጸት - 'የላቀ ውጤት' (Academic Excellence)"
+        },
+        {
+          "type": "quote",
+          "content": "በሥራው የቀለጠ ሰውን አይተሃል? በነገሥታት ፊት ይቆማል፤ በክፉዎች ፊት አይቆምም።",
+          "ref": "ምሳሌ ፳፪፡፳፱"
+        },
+        {
+          "type": "text",
+          "content": "ይህ ምዕራፍ ተማሪው በዩኒቨርሲቲ ቆይታው ለተላከበት ዋና ዓላማ—ለሙያዊ ዕውቀትና ለላቀ ውጤት—ራሱን የሚያዘጋጅበትን መንገድ ይዳስሳል።"
+        }
+      ]
+    }
+  ]
+}

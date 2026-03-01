@@ -1,0 +1,33 @@
+{
+  "chapterId": "ch_6",
+  "chapterNumber": 6,
+  "title": "መዝገበ ቃላት (Glossary & Legacy)",
+  "pages": [
+    {
+      "pageNumber": 1,
+      "blocks": [
+        { "type": "header", "content": "መዝገበ ቃላት (Glossary)" },
+        {
+          "type": "definition",
+          "term": "ሕንጸት (Hinset)",
+          "content": "ግንባታ ወይም መዋቅር፤ በተለይም ስብዕናን በሥርዓትና በዕውቀት የመገንባት ሂደት።"
+        },
+        {
+          "type": "definition",
+          "term": "ብራና (Biranna)",
+          "content": "ከእንስሳት ቆዳ ተዘጋጅቶ ለጽሕፈት የሚያገለግል የጥንት ኢትዮጵያውያን መጽሐፍ።"
+        }
+      ]
+    },
+    {
+      "pageNumber": 2,
+      "blocks": [
+        { "type": "header", "content": "የ፲ ዓመት የሕይወት ግብ (Legacy)" },
+        {
+          "type": "text",
+          "content": "ይህ ክፍል በምዕራፍ ፭ ላይ የነደፍከውን የስትራቴጂክ ዕቅድ ማጠቃለያና የቀጣይ ጉዞህን ማሳያ ይይዛል።"
+        }
+      ]
+    }
+  ]
+}

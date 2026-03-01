@@ -8,3 +8,135 @@ WHERE email = 'your-actual-email@gmail.com';
 
 
 2. modify th wisdom.jeson!
+
+3. Now I understand you clearly 👌
+
+You want:
+
+* ✅ Real parchment manuscript aesthetic
+* ✅ Not ultra-modern
+* ✅ Not burned / destroyed edges
+* ✅ No big dominant cross
+* ✅ Still formation + engineering identity
+* ✅ Matches Biranna manuscript vibe
+
+The image you showed has:
+
+* Strong medieval texture
+* Dark wooden frame
+* Heavy aging
+* Big symbolic logo
+
+For your SRS, that is **too religious-heavy** and too “ancient artifact”.
+
+Your project is:
+
+> Ancient formation spirit + Modern engineering mind.
+
+So we need balance.
+
+---
+
+# 🎯 Correct Aesthetic Direction
+
+Think:
+
+* Clean monastery manuscript
+* Preserved parchment
+* Soft natural aging (not burnt)
+* Subtle symbolic engraving
+* Technical but sacred tone
+
+NOT:
+
+* Dramatic cross center
+* Over-damaged edges
+* Fantasy medieval book cover
+
+---
+
+# 🔥 Use This Prompt (Balanced Manuscript Style)
+
+Copy exactly:
+
+```
+realistic Ethiopian parchment manuscript page, natural aged parchment texture, soft warm beige and light brown tones, subtle organic paper grain, clean edges not burned or torn, minimal natural aging spots, elegant hand-inked Amharic title “ሕንጸተ ሰብእ” in cinnabar red ink, small subtle geometric Ethiopian cross watermark very faint in background, no large religious symbol, balanced composition, traditional manuscript aesthetic but refined, soft directional lighting, high resolution, authentic Biranna style, professional book cover, no modern typography, no frame, no wood border
+```
+
+If tool supports negative prompts, add:
+
+```
+no fantasy art, no medieval game art, no dramatic cross, no burned edges, no dark wooden frame
+```
+
+---
+
+# 🎨 Symbol Suggestion (Better Than Big Cross)
+
+Instead of large cross:
+
+Use subtle background watermark combining:
+
+* thin geometric cross
+* faint gear outline
+* faint DNA curve
+
+Very light emboss.
+Almost invisible.
+
+That communicates:
+Faith + Science + Engineering.
+
+---
+
+# 🛠 Best FREE Tool For This Look
+
+Use:
+
+### 🥇 Leonardo AI (free daily credits)
+
+Better texture realism than Canva.
+
+OR
+
+### 🥈 Playground AI
+
+Good parchment control.
+
+Avoid Grok for this — it tends to over-stylize.
+
+---
+
+# 🧠 Very Important
+
+DO NOT ask AI to render correct Amharic text.
+
+Instead:
+
+1. Generate background only.
+2. Add “ሕንጸተ ሰብእ” manually in Canva using:
+
+   * Abyssinica SIL
+   * Noto Serif Ethiopic
+
+AI will always distort Ge’ez glyphs.
+
+---
+
+# If You Want It To Feel More Monastic
+
+Add this phrase to prompt:
+
+```
+monastic manuscript aesthetic, sacred but academic tone
+```
+
+---
+
+If you want, I can now refine it into:
+
+* More academic manuscript
+* More monastery scroll style
+* Or more subtle tech-formation hybrid
+
+Tell me which direction you want to lean 60/40.

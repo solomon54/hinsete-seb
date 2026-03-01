@@ -9,6 +9,8 @@ import { ProgressRepository } from "@/lib/db/repository";
 import { Progress } from "@/types/progress";
 import Notepad from "../notes/Notepad";
 import { useSearchParams } from "next/navigation";
+import { CoverPage } from "./CoverPage";
+import { GlossaryPage } from "./GlossaryPage";
 
 interface BookProps {
   pages: any[];
@@ -200,32 +202,51 @@ export const Book = ({ pages, chapterId, onPageChange }: BookProps) => {
 
       {/* Main book container */}
       <div
-        className={`book-shell relative preserve-3d transition-all duration-500  "w-full h-full" 
-       `}>
+        className={`book-shell relative preserve-3d transition-all duration-500 w-full h-full`}>
         {isDesktop && <div className="book-spine" />}
 
         <div className="relative w-full h-full preserve-3d">
-          {sheets.map((sheet, index) => (
-            <BookPage
-              key={`${isDesktop ? "d" : "m"}-${index}`}
-              user={user}
-              sheetIndex={index}
-              currentSheet={currentSheet}
-              front={sheet.front}
-              back={sheet.back}
-              isDesktop={isDesktop}
-              onFlipComplete={handleFlipComplete}
-              chapterId={chapterId}
-              currentProgress={progress}
-              onProgressUpdate={() => fetchProgress(false)}
-              totalChapterActions={totalActionsInChapter}
-              onNext={next}
-              onPrev={prev}
-            />
-          ))}
+          {sheets.map((sheet, index) => {
+            // 1. Define the key separately
+            const pageKey = `${isDesktop ? "d" : "m"}-${index}`;
+
+            // 2. Remove 'key' from this object
+            const pageProps = {
+              user: user,
+              sheetIndex: index,
+              currentSheet: currentSheet,
+              front: sheet.front,
+              back: sheet.back,
+              isDesktop: isDesktop,
+              onFlipComplete: handleFlipComplete,
+              onNext: next,
+              onPrev: prev,
+            };
+
+            // 3. Pass key directly to the components
+            if (chapterId === "ch_0") {
+              return <CoverPage key={pageKey} {...pageProps} />;
+            }
+
+            if (chapterId === "ch_6") {
+              return <GlossaryPage key={pageKey} {...pageProps} />;
+            }
+
+            // Default logic for Chapters 1-5
+            return (
+              <BookPage
+                key={pageKey} // Explicitly passed here
+                {...pageProps}
+                chapterId={chapterId}
+                currentProgress={progress}
+                onProgressUpdate={() => fetchProgress(false)}
+                totalChapterActions={totalActionsInChapter}
+              />
+            );
+          })}
         </div>
 
-        {/* Desktop: click left/right edges to flip */}
+        {/* Desktop: click left/right edges to flip - PRESERVED UNTOUCHED */}
         {isDesktop && (
           <div className="absolute inset-0 flex pointer-events-none z-30">
             <div
