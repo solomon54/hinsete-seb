@@ -81,34 +81,47 @@ export default function AuthPage() {
 
     if (!validateIdentifier()) return;
 
-    // Security: Limit resends to 3 times
+    // Security: Limit resends to 3 times per session
     if (resendCount >= 3) {
-      setErrorMessage("ከ3 ጊዜ በላይ ኮድ መላክ አይቻልም። እባክዎ ቆይተው ይሞክሩ።");
+      setErrorMessage("ከ3 ጊዜ በላይ ኮድ መላክ አይቻልም። እባክዎ 1-2 ደቂቃ ቆይተው ይሞክሩ።");
       return;
     }
+
+    // Prevent double clicks
+    if (loading) return;
 
     setLoading(true);
     const identifier = getFullIdentifier();
 
-    const { error } =
-      method === "email"
-        ? await supabase.auth.signInWithOtp({ email: identifier })
-        : await supabase.auth.signInWithOtp({ phone: identifier });
+    try {
+      const { error } =
+        method === "email"
+          ? await supabase.auth.signInWithOtp({ email: identifier })
+          : await supabase.auth.signInWithOtp({ phone: identifier });
 
-    if (error) {
-      const msg =
-        error.message.includes("provider") || error.status === 400
-          ? "ይቅርታ፣ የስልክ አገልግሎት በአሁኑ ወቅት አልተከፈተም። እባክዎ በኢሜይል ወይም በGoogle ይሞክሩ።"
-          : error.message;
-      setErrorMessage(msg);
-    } else {
-      setStep("otp");
-      setTimer(60);
-      setOtp(Array(6).fill(""));
-      setOtpError(null);
-      setResendCount((prev) => prev + 1);
+      if (error) {
+        if (error.status === 429) {
+          // Supabase rate limit hit
+          setErrorMessage("ብዙ ጊዜ ኮድ ተላከ። እባክዎ 1-2 ደቂቃ ቆይተው ይሞክሩ።");
+        } else if (error.status === 400 || error.message.includes("provider")) {
+          setErrorMessage(
+            "ይቅርታ፣ የስልክ አገልግሎት በአሁኑ ወቅት አልተከፈተም። እባክዎ በኢሜይል ወይም በGoogle ይሞክሩ።"
+          );
+        } else {
+          setErrorMessage(error.message);
+        }
+      } else {
+        setStep("otp");
+        setTimer(120); // Increased cooldown to 2 minutes
+        setOtp(Array(6).fill(""));
+        setOtpError(null);
+        setResendCount((prev) => prev + 1);
+      }
+    } catch (err: any) {
+      setErrorMessage("አንድ አልተገባም ፣ እባክዎ በኋላ ይሞክሩ።");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleOtpChange = (index: number, val: string) => {
@@ -277,6 +290,15 @@ export default function AuthPage() {
                   {loading ? "በማረጋገጥ ላይ..." : "አረጋግጥ (Verify)"}
                 </button>
               </form>
+
+              {/* 〰 Display error messages in OTP step 〰 */}
+              {errorMessage && (
+                <p className="text-red-600 text-xs font-medium mt-2">
+                  {errorMessage}
+                </p>
+              )}
+
+              {/* 〰 Resend button with cooldown 〰 */}
               <ResendLink
                 timer={timer}
                 loading={loading}
