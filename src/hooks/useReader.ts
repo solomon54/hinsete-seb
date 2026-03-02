@@ -20,7 +20,15 @@ export function useReader(weekNumber: number) {
   useEffect(() => {
     const evaluateAccess = async () => {
       if (authLoading) return;
-
+      /**
+       * 🔓 INTRODUCTION BYPASS (Week 0 is always free)
+       */
+      if (weekNumber === 0) {
+        setStatus("unlocked");
+        setUnlockDate(null);
+        setLockMessage(null);
+        return;
+      }
       // Safety 1: No user = No access (unchanged)
       if (!user) {
         setStatus("locked");
@@ -53,6 +61,14 @@ export function useReader(weekNumber: number) {
       }
 
       const serverTime = new Date().toISOString();
+
+      // 1. Clock Check (Anti-Cheat)
+      if (weekNumber !== 0 && checkClockSkew(serverTime)) {
+        setStatus("skewed");
+        setLockMessage("ሰዓትዎ ትክክል አይደለም። እባክዎ ወደ ትክክለኛው ሰዓት ይመልሱ።");
+        setUnlockDate(null);
+        return;
+      }
 
       // 1. Clock Check (Anti-Cheat) – unchanged
       if (checkClockSkew(serverTime)) {

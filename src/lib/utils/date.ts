@@ -30,6 +30,9 @@ export function isChapterUnlocked(
   weekNumber: number,
   serverTimestamp: string | null | undefined
 ): boolean {
+  // 🔓 NEW: Week 0 is always unlocked regardless of dates
+  if (weekNumber === 0) return true;
+
   // Early exit — missing critical data → treat as locked (safest default)
   if (!joinDate || !serverTimestamp) {
     return false;
@@ -66,6 +69,10 @@ export function getChapterUnlockDate(
   joinDate: string | null | undefined,
   weekNumber: number
 ): string {
+  // 🔓 NEW: If it's Week 0, the unlock date is simply the join date (or now)
+  if (weekNumber <= 1) {
+    return joinDate ?? new Date().toISOString();
+  }
   // Defensive fallback — invalid/missing joinDate → pretend it's now
   if (!joinDate) {
     return new Date().toISOString();

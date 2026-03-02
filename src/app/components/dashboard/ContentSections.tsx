@@ -104,7 +104,9 @@ export default function ContentSections({
     // GUEST LOGIC: If no userJoinDate, use serverNow as the starting point
     const effectiveStartDate = userJoinDate || serverNow;
 
-    if (typeof chapterNumber !== "number" || chapterNumber < 1) return false;
+    if (typeof chapterNumber !== "number") return false;
+    if (chapterNumber === 0) return true;
+    if (chapterNumber < 0) return false;
 
     return isChapterUnlocked(effectiveStartDate, chapterNumber, serverNow);
   };

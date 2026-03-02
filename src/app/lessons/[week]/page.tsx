@@ -74,14 +74,11 @@ export default function LessonPage() {
   const chapterData = useMemo(() => CHAPTERS[weekNumber], [weekNumber]);
 
   // Auth Guard
-  // src/app/lessons/[week]/page.tsx
-
   useEffect(() => {
-    if (!authLoading && user === null) {
-      console.log("No user found, redirecting to auth...");
+    if (!authLoading && user === null && weekNumber !== 0) {
       router.replace(`/auth?callbackUrl=${encodeURIComponent(pathname)}`);
     }
-  }, [user, authLoading, router, pathname]);
+  }, [user, authLoading, router, pathname, weekNumber]);
   const handlePageChange = (index: number) => {
     setCurrentPage(index);
   };
@@ -98,7 +95,7 @@ export default function LessonPage() {
     return <WaxSeal unlockDate={unlockDate.toISOString()} />;
   }
 
-  if (!user) return null;
+  if (!user && weekNumber !== 0) return null;
 
   return (
     <div className="relative min-h-screen bg-[#fdfaf1]">
@@ -108,14 +105,16 @@ export default function LessonPage() {
         onPageChange={handlePageChange}
       />
 
-      <Notepad
-        isOpen={isNotepadOpen}
-        onClose={() => setIsNotepadOpen(false)}
-        chapterId={chapterData.chapterId}
-        userId={user.id}
-        pageIndex={currentPage}
-        password={user.id}
-      />
+      {user && (
+        <Notepad
+          isOpen={isNotepadOpen}
+          onClose={() => setIsNotepadOpen(false)}
+          chapterId={chapterData.chapterId}
+          userId={user.id}
+          pageIndex={currentPage}
+          password={user.id}
+        />
+      )}
     </div>
   );
 }
