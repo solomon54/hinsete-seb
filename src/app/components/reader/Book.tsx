@@ -246,17 +246,24 @@ export const Book = ({ pages, chapterId, onPageChange }: BookProps) => {
           })}
         </div>
 
-        {/* Desktop: click left/right edges to flip - PRESERVED UNTOUCHED */}
+        {/* Desktop: click left/right edges to flip */}
         {isDesktop && (
-          <div className="absolute inset-0 flex pointer-events-none z-30">
+          <div className="absolute inset-0 flex pointer-events-none z-[500]">
+            {/* Increased z to 500 to clear any Glossary stacking */}
             <div
-              className="w-[20%] h-full cursor-w-resize pointer-events-auto"
-              onClick={prev}
+              className="w-[20%] h-full cursor-w-resize pointer-events-auto bg-transparent"
+              onClick={(e) => {
+                e.stopPropagation();
+                prev();
+              }}
             />
             <div className="flex-1 h-full" />
             <div
-              className="w-[20%] h-full cursor-e-resize pointer-events-auto"
-              onClick={next}
+              className="w-[20%] h-full cursor-e-resize pointer-events-auto bg-transparent"
+              onClick={(e) => {
+                e.stopPropagation();
+                next();
+              }}
             />
           </div>
         )}
