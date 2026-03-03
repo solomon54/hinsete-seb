@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hinsete – Offline Reader</title>
+    <link rel="icon" href="/favicon.ico" type="image/png">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap');
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Merriweather', serif;
+            background: url('/assets/images/parchment-grain.png') repeat;
+            color: #3e2f1c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .offline-container {
+            max-width: 640px;
+            width: 90%;
+            padding: 2rem;
+            background: rgba(255, 250, 240, 0.95);
+            border: 2px solid #b99b6b;
+            border-radius: 16px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #9b5c12;
+        }
+
+        p {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .icon {
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 1rem auto;
+            background: url('/assets/icons/icon-512x512.png') no-repeat center/contain;
+            animation: bounce 1.5s infinite alternate;
+        }
+
+        .lesson-container {
+            min-height: 120px;
+            margin: 1rem 0;
+            padding: 1rem;
+            text-align: left;
+            background: #fef8f2;
+            border-left: 4px solid #9b5c12;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.4s ease-in-out;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0d6c2;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #9b5c12;
+            transition: width 0.4s ease-in-out;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        .nav-buttons button {
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            background-color: #9b5c12;
+            color: #fff8f0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .nav-buttons button:hover {
+            transform: scale(1.05);
+            background-color: #b37b4c;
+        }
+
+        .nav-buttons button:disabled {
+            opacity: 0.5;
+            cursor: default;
+            transform: none;
+            background-color: #9b5c12;
+        }
+
+        .offline-status {
+            position: absolute;
+            top: 8px;
+            right: 16px;
+            font-size: 0.8rem;
+            color: #9b5c12;
+            font-weight: bold;
+        }
+
+        @keyframes bounce {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .offline-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="offline-container">
+        <div class="offline-status">Offline Mode</div>
+        <div class="icon"></div>
+        <h1>Hinsete – Offline Reader</h1>
+        <p>While disconnected, explore your preloaded wisdom:</p>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="lesson-container" id="lessonContent">
+            Loading lessons…
+        </div>
+
+        <div class="nav-buttons">
+            <button id="prevBtn">← Previous</button>
+            <button id="nextBtn">Next →</button>
+        </div>
+    </div>
+
+    <audio id="pageFlip" src="/assets/audio/page-flip.wav"></audio>
+
+    <script>
+        const audio = document.getElementById('pageFlip');
+        audio.volume = 0.15;
+
+        let lessons = [];
+        let currentIndex = 0;
+        const lessonContent = document.getElementById('lessonContent');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressFill = document.getElementById('progressFill');
+
+        async function preloadLessons() {
+            const lessonFiles = [
+                '/lib/contents/introduction.json',
+                '/lib/contents/chapter_1.json',
+                '/lib/contents/chapter_2.json',
+                '/lib/contents/chapter_3.json',
+                '/lib/contents/chapter_4.json',
+                '/lib/contents/chapter_5.json'
+            ];
+
+            for (const file of lessonFiles) {
+                try {
+                    const response = await fetch(file);
+                    const data = await response.json();
+                    lessons.push(data.pages?.map(p => p.content).join('\n\n') || '');
+                } catch {
+                    lessons.push('Lesson unavailable offline.');
+                }
+            }
+
+            showLesson(currentIndex);
+        }
+
+        function updateProgress() {
+            const percent = lessons.length ? ((currentIndex + 1) / lessons.length) * 100 : 0;
+            progressFill.style.width = `${percent}%`;
+        }
+
+        function showLesson(index) {
+            if (lessons[index]) {
+                lessonContent.style.opacity = 0;
+                setTimeout(() => {
+                    lessonContent.innerHTML = lessons[index];
+                    lessonContent.style.opacity = 1;
+                    audio.play().catch(() => { });
+                }, 200);
+            }
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === lessons.length - 1;
+            updateProgress();
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showLesson(currentIndex);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < lessons.length - 1) {
+                currentIndex++;
+                showLesson(currentIndex);
+            }
+        });
+
+        preloadLessons();
+    </script>
+</body>
+
+</html>
