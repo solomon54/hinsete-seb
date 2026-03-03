@@ -194,7 +194,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="biranna-viewport flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-start sm:items-center justify-center px-4 py-10">
       <div className="w-full max-w-md bg-[#fdfaf1] rounded-3xl border border-[#9b2d30]/20 shadow-2xl overflow-hidden">
         <div className="bg-[#9b2d30] p-8 text-center relative">
           {step === "otp" && (
@@ -245,7 +245,7 @@ export default function AuthPage() {
                 </button>
               </form>
 
-              {/* Your original "OR" divider */}
+              {/*  original "OR" divider */}
               <div className="relative my-8 text-center">
                 <hr className="border-[#9b2d30]/10" />
                 <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#fdfaf1] px-4 text-[10px] font-black text-[#9b2d30]/40 uppercase tracking-widest">

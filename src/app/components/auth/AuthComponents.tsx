@@ -169,7 +169,7 @@ export function OtpInputs({
 }: any) {
   return (
     <div className="space-y-2">
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center gap-2 sm:gap-3 flex-wrap">
         {otp.map((digit: string, index: number) => (
           <input
             key={index}
@@ -183,7 +183,7 @@ export function OtpInputs({
             onChange={(e) => handleOtpChange(index, e.target.value)}
             onKeyDown={(e) => handleOtpKeyDown(index, e)}
             onPaste={handleOtpPaste}
-            className={`w-12 h-14 text-center text-2xl font-black rounded-xl border outline-none transition-all ${
+            className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-2xl font-black rounded-xl border outline-none transition-all ${
               otpError
                 ? "border-red-500 focus:ring-red-300"
                 : "border-[#9b2d30]/20 focus:ring-[#9b2d30]/30"
