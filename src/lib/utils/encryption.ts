@@ -36,22 +36,21 @@ export async function encryptData(
 ): Promise<string> {
   const iv = generateIV();
   const encoder = new TextEncoder();
-  const encoded = encoder.encode(text);
+  const data = encoder.encode(text);
 
+  // We cast both the algorithm object and the data to 'any' then the required type
+  // to bypass the SharedArrayBuffer incompatibility check in TS 5.x
   const encryptedBuffer = await window.crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
+    { name: "AES-GCM", iv: iv as BufferSource } as AesGcmParams,
     key,
-    encoded
+    data as BufferSource
   );
 
   const combined = new Uint8Array(iv.length + encryptedBuffer.byteLength);
   combined.set(iv);
   combined.set(new Uint8Array(encryptedBuffer), iv.length);
 
-  // ✅ Safe way to convert bytes to Base64 (handles Unicode/Amharic correctly)
-  return btoa(
-    Array.from(combined, (byte) => String.fromCharCode(byte)).join("")
-  );
+  return btoa(String.fromCharCode(...combined));
 }
 
 export async function decryptData(
@@ -61,12 +60,10 @@ export async function decryptData(
   if (!input?.trim()) return "";
 
   try {
-    // ✅ Safe way to convert Base64 back to bytes
     const binaryStr = atob(input);
     const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) {
+    for (let i = 0; i < binaryStr.length; i++)
       bytes[i] = binaryStr.charCodeAt(i);
-    }
 
     if (bytes.length < 28) return input;
 
@@ -74,14 +71,14 @@ export async function decryptData(
     const ciphertext = bytes.slice(12);
 
     const decryptedBuffer = await window.crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
+      { name: "AES-GCM", iv: iv as BufferSource } as AesGcmParams,
       key,
-      ciphertext
+      ciphertext as BufferSource
     );
 
-    return new TextDecoder("utf-8").decode(decryptedBuffer);
+    return new TextDecoder().decode(decryptedBuffer);
   } catch (err: any) {
     console.warn("Decryption skipped (Legacy or Key mismatch):", err.message);
-    return input; // Never return empty string on failure; return the input to avoid data loss
+    return input;
   }
 }
