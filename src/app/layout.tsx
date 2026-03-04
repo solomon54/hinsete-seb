@@ -16,13 +16,12 @@ export const viewport: Viewport = {
   themeColor: "#9b5c12",
   width: "device-width",
   initialScale: 1,
-  // Note: We removed userScalable: false here for accessibility compliance
 };
 
 export const metadata: Metadata = {
   title: "ሕንጸተ ሰብእ (Hinsete Seb)",
   description: "A digital manuscript for academic and spiritual excellence",
-  manifest: "/manifest.json", // Ensure this points to your generated manifest
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

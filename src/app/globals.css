@@ -390,3 +390,18 @@ img {
   -webkit-user-drag: none;
   user-drag: none;
 }
+
+/* the  shimmer effect for loading placeholders */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.5s infinite linear;
+}

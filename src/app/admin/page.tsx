@@ -316,6 +316,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-[32px] w-full max-w-lg overflow-hidden shadow-2xl">
             <div className="relative p-8 text-center">
               <button
+                title="Close details"
                 onClick={() => setSelectedUser(null)}
                 className="absolute top-6 right-6 p-2 text-[#9b2d30] hover:bg-[#9b2d30]/10 rounded-full transition">
                 <X size={22} />

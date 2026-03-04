@@ -1,6 +1,6 @@
 /* =========================================
    HINSETE SERVICE WORKER
-   Production Grade | Bulletproof | Safe
+   Production Grade | Persistent | Hardened
 ========================================= */
 
 const VERSION = "v1.1.0";
@@ -10,7 +10,7 @@ const RUNTIME_CACHE = `hinsete-runtime-${VERSION}`;
 const STATIC_ASSETS = [
   "/",
   "/offline.html",
-  "/manifest.json",
+  "/manifest.webmanifest",
   "/assets/icons/icon-192x192.png",
   "/assets/icons/icon-512x512.png",
   "/assets/images/ennat.jpg",
@@ -20,7 +20,7 @@ const STATIC_ASSETS = [
 ];
 
 /* =========================================
-   INSTALL (Individual Caching)
+   INSTALL (Kept your Individual Caching)
 ========================================= */
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -38,28 +38,27 @@ self.addEventListener("install", (event) => {
 });
 
 /* =========================================
-   ACTIVATE (Hardened Cleanup)
+   ACTIVATE (Kept your Hardened Cleanup)
 ========================================= */
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter(
-            (key) =>
-              key.startsWith("hinsete-static-") ||
-              key.startsWith("hinsete-runtime-")
-          )
-          .filter((key) => !key.endsWith(VERSION))
-          .map((key) => caches.delete(key))
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter(
+              (key) => key.startsWith("hinsete-") && !key.endsWith(VERSION)
+            )
+            .map((key) => caches.delete(key))
+        )
       )
-    )
   );
   self.clients.claim();
 });
 
 /* =========================================
-   FETCH HANDLER
+   FETCH HANDLER (The "Persistence" Engine)
 ========================================= */
 self.addEventListener("fetch", (event) => {
   const { request } = event;
@@ -76,11 +75,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2. NAVIGATION (Network First, then Offline Page)
-  if (request.mode === "navigate") {
+  // 2. PERSISTENT CONTENT: Navigation OR Next.js Data (_rsc)
+  // This ensures that when user read a chapter, the SW "steals" a copy for the cache.
+  const isNavigation = request.mode === "navigate";
+  const isNextData = url.search.includes("_rsc");
+
+  if (isNavigation || isNextData) {
     event.respondWith(
       fetch(request)
         .then((response) => {
+          if (!response || response.status !== 200) return response;
+
           const clone = response.clone();
           event.waitUntil(
             caches
@@ -90,14 +95,18 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(async () => {
+          // If network fails, look for this specific page/data in the cache
           const cached = await caches.match(request);
-          return cached || caches.match("/offline.html");
+          if (cached) return cached;
+
+          // If it's a new page and we have nothing, show offline fallback
+          if (isNavigation) return caches.match("/offline.html");
         })
     );
     return;
   }
 
-  // 3. STATIC ASSETS (Cache First)
+  // 3. STATIC ASSETS (Cache First, then Network)
   if (
     ["image", "audio", "font", "style", "script"].includes(request.destination)
   ) {
