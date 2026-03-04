@@ -10,9 +10,10 @@ const RUNTIME_CACHE = `hinsete-runtime-${VERSION}`;
 const STATIC_ASSETS = [
   "/",
   "/offline.html",
-  "/manifest.webmanifest",
+  "/manifest.json",
   "/assets/icons/icon-192x192.png",
   "/assets/icons/icon-512x512.png",
+  "/assets/images/ennat.jpg",
   "/assets/images/parchment-grain.png",
   "/assets/images/parchment-subtle.webp",
   "/assets/audio/parchment%20flip.wav",
