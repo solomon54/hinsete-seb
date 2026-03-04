@@ -1,71 +1,64 @@
-//public/sw.js
 /* =========================================
    HINSETE SERVICE WORKER
-   Robust | Safe | Content-First
+   Production Grade | Bulletproof | Safe
 ========================================= */
 
-const VERSION = "v1";
+const VERSION = "v1.1.0";
 const STATIC_CACHE = `hinsete-static-${VERSION}`;
 const RUNTIME_CACHE = `hinsete-runtime-${VERSION}`;
 
 const STATIC_ASSETS = [
   "/",
   "/offline.html",
-  "/favicon-for-app/manifest.json",
+  "/manifest.webmanifest",
+  "/assets/icons/icon-192x192.png",
+  "/assets/icons/icon-512x512.png",
   "/assets/images/parchment-grain.png",
   "/assets/images/parchment-subtle.webp",
-  "/assets/images/cover_etching.jpg",
-  "/assets/audio/page-flip.wav",
-  "/assets/audio/Parchment flip.wav",
-  "/lib/contents/introduction.json",
-  "/lib/contents/chapter_1.json",
-  "/lib/contents/chapter_2.json",
-  "/lib/contents/chapter_3.json",
+  "/assets/audio/parchment%20flip.wav",
 ];
 
 /* =========================================
-   INSTALL
+   INSTALL (Individual Caching)
 ========================================= */
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(STATIC_CACHE).then(async (cache) => {
+      for (const asset of STATIC_ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.warn("[SW] Skipping non-existent asset:", asset);
+        }
+      }
+    })
   );
   self.skipWaiting();
 });
 
 /* =========================================
-   ACTIVATE (Cleanup Old Caches)
+   ACTIVATE (Hardened Cleanup)
 ========================================= */
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key !== STATIC_CACHE && key !== RUNTIME_CACHE)
-            .map((key) => caches.delete(key))
-        )
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter(
+            (key) =>
+              key.startsWith("hinsete-static-") ||
+              key.startsWith("hinsete-runtime-")
+          )
+          .filter((key) => !key.endsWith(VERSION))
+          .map((key) => caches.delete(key))
       )
+    )
   );
   self.clients.claim();
 });
 
 /* =========================================
-   CACHE SIZE LIMITER
-========================================= */
-function limitCacheSize(name, size) {
-  caches.open(name).then((cache) => {
-    cache.keys().then((keys) => {
-      if (keys.length > size) {
-        cache.delete(keys[0]).then(() => limitCacheSize(name, size));
-      }
-    });
-  });
-}
-
-/* =========================================
-   FETCH STRATEGY
+   FETCH HANDLER
 ========================================= */
 self.addEventListener("fetch", (event) => {
   const { request } = event;
@@ -73,9 +66,7 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  /* ----------------------------------------
-     🚫 NEVER CACHE AUTH / API / SUPABASE
-  ----------------------------------------- */
+  // 1. BYPASS AUTH & API (Always Network)
   if (
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/auth") ||
@@ -84,96 +75,48 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /* ----------------------------------------
-     📄 JSON CONTENT (Lessons) → CACHE FIRST
-  ----------------------------------------- */
-  if (request.url.endsWith(".json")) {
+  // 2. NAVIGATION (Network First, then Offline Page)
+  if (request.mode === "navigate") {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached;
-        return fetch(request)
-          .then((res) => {
-            if (!res || res.status !== 200) return res;
-            const clone = res.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => {
-              cache.put(request, clone);
-              limitCacheSize(RUNTIME_CACHE, 60);
-            });
-            return res;
-          })
-          .catch(() => cached);
-      })
+      fetch(request)
+        .then((response) => {
+          const clone = response.clone();
+          event.waitUntil(
+            caches
+              .open(RUNTIME_CACHE)
+              .then((cache) => cache.put(request, clone))
+          );
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          return cached || caches.match("/offline.html");
+        })
     );
     return;
   }
 
-  /* ----------------------------------------
-     🖼️ STATIC ASSETS → CACHE FIRST
-  ----------------------------------------- */
+  // 3. STATIC ASSETS (Cache First)
   if (
     ["image", "audio", "font", "style", "script"].includes(request.destination)
   ) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        if (cached) return cached;
-        return fetch(request)
-          .then((res) => {
-            if (!res || res.status !== 200) return res;
-            const clone = res.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => {
-              cache.put(request, clone);
-              limitCacheSize(RUNTIME_CACHE, 60);
-            });
-            return res;
+        return (
+          cached ||
+          fetch(request).then((response) => {
+            if (!response || response.status !== 200) return response;
+            const clone = response.clone();
+            event.waitUntil(
+              caches
+                .open(RUNTIME_CACHE)
+                .then((cache) => cache.put(request, clone))
+            );
+            return response;
           })
-          .catch(() => cached);
+        );
       })
     );
     return;
   }
-
-  /* ----------------------------------------
-     📄 NAVIGATION (HTML) → NETWORK FIRST
-  ----------------------------------------- */
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((res) => {
-          if (!res || res.status !== 200) return res;
-          const clone = res.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => {
-            cache.put(request, clone);
-            limitCacheSize(RUNTIME_CACHE, 30);
-          });
-          return res;
-        })
-        .catch(() =>
-          caches
-            .match(request)
-            .then((cached) => cached || caches.match("/offline.html"))
-        )
-    );
-    return;
-  }
-
-  /* ----------------------------------------
-     📦 DEFAULT → STALE WHILE REVALIDATE
-  ----------------------------------------- */
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      const fetchPromise = fetch(request)
-        .then((res) => {
-          if (res && res.status === 200) {
-            const clone = res.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => {
-              cache.put(request, clone);
-              limitCacheSize(RUNTIME_CACHE, 60);
-            });
-          }
-          return res;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })
-  );
 });

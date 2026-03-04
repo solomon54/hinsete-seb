@@ -144,7 +144,7 @@ export const Book = ({ pages, chapterId, onPageChange }: BookProps) => {
   // ────────────────────────────────────────────────
   useEffect(() => {
     setHasMounted(true);
-    audioRef.current = new Audio("/assets/audio/Parchment flip.wav");
+    audioRef.current = new Audio("/assets/audio/parchment flip.wav");
     audioRef.current.preload = "auto";
   }, []);
 
