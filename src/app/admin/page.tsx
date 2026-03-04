@@ -29,6 +29,7 @@ interface Profile {
   joinDate: string | null;
   lastSyncTimestamp: string | null;
   avatarUrl: string | null;
+  isPwaInstalled: boolean;
 }
 
 export default function AdminDashboard() {
@@ -73,7 +74,7 @@ export default function AdminDashboard() {
         } = await supabase
           .from("profiles")
           .select(
-            "id, email, name, role, joinDate, lastSyncTimestamp, avatarUrl",
+            "id, email, name, role, joinDate, lastSyncTimestamp, avatarUrl, isPwaInstalled",
             {
               count: "exact",
             }
@@ -82,14 +83,14 @@ export default function AdminDashboard() {
 
         if (profilesError) throw profilesError;
 
-        const data = profilesData || [];
+        const data = (profilesData as Profile[]) || [];
         setProfiles(data);
 
         setStats({
           totalUsers: count || data.length,
           totalOwners: data.filter((p) => p.role === "OWNER").length,
           totalAdmins: data.filter((p) => p.role === "ADMIN").length,
-          pwaInstalls: 0,
+          pwaInstalls: data.filter((p) => p.isPwaInstalled === true).length,
         });
       } catch (err: any) {
         console.error("Admin fetch error:", err);
@@ -206,9 +207,10 @@ export default function AdminDashboard() {
             value={stats.totalAdmins}
           />
           <StatCard
-            icon={<DownloadCloud className="w-8 h-8 text-[#9b2d30" />}
+            icon={<DownloadCloud className="w-8 h-8 text-blue-600" />}
             label="ጭነቶች (PWA)"
-            value="TBD"
+            value={stats.pwaInstalls}
+            accent="default"
           />
         </div>
 

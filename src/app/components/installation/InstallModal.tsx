@@ -3,6 +3,8 @@
 
 import { useEffect, useState } from "react";
 import { installManager } from "@/lib/installManager";
+import { createClient } from "@/lib/db/browser-client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface InstallModalProps {
   lessonProgress?: { completed: number; total: number };
@@ -14,8 +16,12 @@ export default function InstallModal({ lessonProgress }: InstallModalProps) {
   const [visible, setVisible] = useState(false);
   const [mode, setMode] = useState<ModalMode>(null);
 
+  // 1. Get the authenticated user
+  const { user } = useAuth();
+  const supabase = createClient();
+
   useEffect(() => {
-    // 1. Register the worker immediately when the modal's logic initializes
+    // 2. Start the engine
     installManager.register();
 
     const checkInstallationStatus = () => {
@@ -24,28 +30,22 @@ export default function InstallModal({ lessonProgress }: InstallModalProps) {
         "(display-mode: standalone)"
       ).matches;
 
-      // Logic: If we thought it was installed, but it's not in standalone mode anymore,
-      // the user likely deleted it or is browsing in the browser again.
       if (wasInstalled && !isStandalone) {
-        localStorage.setItem("pwa_installed", "false"); // Reset state
+        localStorage.setItem("pwa_installed", "false");
       }
     };
 
     const onInstallAvailable = () => {
-      // Only show if we haven't nagged them in the last 24 hours
       const lastPrompt = localStorage.getItem("pwa_last_prompt");
       const now = Date.now();
-
       if (!lastPrompt || now - parseInt(lastPrompt) > 86400000) {
         setMode("install");
-        // We don't setVisible(true) immediately - we wait for a "Lesson Read"
-        // or a specific trigger to be polite.
       }
     };
 
     const onUpdateAvailable = () => {
       setMode("update");
-      setVisible(true); // Updates are critical, show immediately
+      setVisible(true);
     };
 
     const onLessonRead = () => {
@@ -59,14 +59,27 @@ export default function InstallModal({ lessonProgress }: InstallModalProps) {
       }
     };
 
+    // 3. Define the Installation Sync Logic
+    // This is the specific "One thing" we ensure doesn't get lost
+    installManager.onInstalled(async () => {
+      console.log("✅ Installation confirmed by Manager");
+      localStorage.setItem("pwa_installed", "true");
+      setVisible(false);
+
+      if (user?.id) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ isPwaInstalled: true })
+          .eq("id", user.id);
+
+        if (error) console.error("Error syncing PWA status:", error);
+        else console.log("🚀 Sync to Supabase successful");
+      }
+    });
+
     window.addEventListener("pwaInstallAvailable", onInstallAvailable);
     window.addEventListener("swUpdateAvailable", onUpdateAvailable);
     window.addEventListener("lessonRead", onLessonRead);
-
-    installManager.onInstalled(() => {
-      localStorage.setItem("pwa_installed", "true");
-      setVisible(false);
-    });
 
     checkInstallationStatus();
 
@@ -75,7 +88,7 @@ export default function InstallModal({ lessonProgress }: InstallModalProps) {
       window.removeEventListener("swUpdateAvailable", onUpdateAvailable);
       window.removeEventListener("lessonRead", onLessonRead);
     };
-  }, [visible]);
+  }, [visible, user, supabase]);
 
   /* =========================================
      ACTIONS

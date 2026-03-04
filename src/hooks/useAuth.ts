@@ -30,7 +30,7 @@ export function useAuth() {
       try {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select('role, "joinDate", name, "avatarUrl"')
+          .select('role, "joinDate", name, "avatarUrl","isPwaInstalled"')
           .eq("id", sessionUser.id)
           .single();
 
@@ -79,8 +79,6 @@ export function useAuth() {
         }
       }
     }
-
-    // REMOVE getSession() here.
     // onAuthStateChange with 'INITIAL_SESSION' event handles the first load automatically.
     const {
       data: { subscription },
