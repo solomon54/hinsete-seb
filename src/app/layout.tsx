@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import InstallModal from "@/app/components/installation/InstallModal";
 import ClientSecurity from "@/app/components/security/ClientSecurity";
+import MainNavigation from "@/app/components/navigation/MainNavigation";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -42,17 +43,14 @@ export default function RootLayout({
     <html lang="am" className="scroll-smooth">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#fdfaf1] text-[#3d1c1d] selection:bg-[#9b5c12]/20`}>
-        {/* 🔒 Client-side security layers */}
         <ClientSecurity />
-
-        {/* 🚀 The PWA Hub: 
-            This handles SW registration, Update logic, 
-            and the Install UI for Android & iOS.
-        */}
         <InstallModal lessonProgress={lessonProgress} />
 
-        {/* Main app content */}
-        <main className="min-h-screen relative">{children}</main>
+        {/* Added pb-24 for mobile nav spacing */}
+        <main className="min-h-screen relative pb-24 md:pb-0">{children}</main>
+
+        {/* Global Navigation */}
+        <MainNavigation />
       </body>
     </html>
   );
