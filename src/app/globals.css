@@ -424,3 +424,8 @@ img {
     }
   }
 }
+
+/* safe area insets for mobile devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}

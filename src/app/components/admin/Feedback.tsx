@@ -1,3 +1,4 @@
+//src/app/components/admin/Feedback.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -17,7 +18,6 @@ import {
 } from "lucide-react";
 import { formatAmharicDate } from "@/lib/utils/ethiopianCalendar";
 
-// Define the interface for props to fix the TypeScript error
 interface FeedbackProps {
   searchQuery: string;
 }

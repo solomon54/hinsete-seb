@@ -207,7 +207,7 @@ export default function Dashboard() {
       <button
         title="Open Notepad"
         onClick={() => setIsNotepadOpen(true)}
-        className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-[#9b2d30] text-[#fdfaf1] rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all border-2 border-[#fdfaf1]/20">
+        className="fixed bottom-21 right-8 z-50 w-14 h-14 bg-[#9b2d30] text-[#fdfaf1] rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all border-2 border-[#fdfaf1]/20">
         <BookOpenText size={24} />
       </button>
 

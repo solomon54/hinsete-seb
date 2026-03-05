@@ -1,93 +1,90 @@
 // src/app/components/navigation/MainNavigation.tsx
 "use client";
 
-import { useState } from "react";
 import { Home, Info, MessageSquarePlus, User, Heart } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Feedback from "../feedback/FeedBackPage";
-import About from "../about/AboutPage";
+import { useScrollDirection } from "@/config/useScrollDirection";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [activeModal, setActiveModal] = useState<"feedback" | "about" | null>(
-    null
-  );
+  const scrollDirection = useScrollDirection();
+
+  // Hide navbar on lesson/book pages
+  if (pathname.startsWith("/lessons/")) return null;
 
   const navItems = [
     { name: "መነሻ", icon: <Home size={22} />, path: "/" },
-    {
-      name: "ስለ እኛ",
-      icon: <Info size={22} />,
-      action: () => setActiveModal("about"),
-    },
+    { name: "ስለ እኛ", icon: <Info size={22} />, path: "/about" },
     {
       name: "አስተያየት",
       icon: <MessageSquarePlus size={22} />,
-      action: () => setActiveModal("feedback"),
-      isCenter: true,
+      path: "/feedback",
     },
     { name: "ምስጋና", icon: <Heart size={22} />, path: "/thanks" },
     { name: "መገለጫ", icon: <User size={22} />, path: "/profile" },
   ];
 
+  const normalizePath = (path: string) => path.split("?")[0];
+
+  const renderNavItem = (item: (typeof navItems)[0], isDesktop = false) => {
+    const isActive = normalizePath(pathname) === normalizePath(item.path);
+
+    const baseClasses = isDesktop
+      ? `relative flex flex-col items-center group cursor-pointer transition-all duration-300 ${
+          isActive ? "text-[#9b2d30]" : "text-[#3d1c1d]/30 hover:text-[#9b2d30]"
+        }`
+      : `flex-1 flex flex-col items-center justify-center transition-all duration-300 ${
+          isActive ? "text-[#9b2d30]" : "text-[#3d1c1d]/40"
+        }`;
+
+    return (
+      <Link key={item.name} href={item.path} className={baseClasses}>
+        {isDesktop && isActive && (
+          <div className="absolute -left-6 w-1.5 h-8 bg-[#9b2d30] rounded-r-full animate-in slide-in-from-left duration-500 z-1000" />
+        )}
+        <div
+          className={`p-2 rounded-xl transition-all ${
+            !isDesktop && isActive ? "bg-[#9b2d30]/10 scale-110" : ""
+          }`}>
+          {item.icon}
+        </div>
+        <span
+          className={`${
+            isDesktop
+              ? "text-[10px] font-black mt-2 uppercase tracking-tighter"
+              : "text-[10px] font-black mt-1 tracking-tight"
+          }`}>
+          {item.name}
+        </span>
+      </Link>
+    );
+  };
+
   return (
     <>
-      {/* MOBILE BOTTOM NAV */}
-      <nav className="fixed bottom-0 left-0 right-0 z-[90] bg-[#fdfaf1]/90 backdrop-blur-xl border-t border-[#b99b6b]/20 px-4 pb-8 pt-3 md:hidden">
-        <div className="flex justify-around items-end max-w-md mx-auto">
-          {navItems.map((item) => {
-            const isActive = pathname === item.path;
-
-            if (item.isCenter) {
-              return (
-                <button
-                  key={item.name}
-                  onClick={item.action}
-                  className="flex flex-col items-center justify-center -translate-y-5 w-14 h-14 bg-[#9b5c12] rounded-2xl shadow-lg shadow-[#9b5c12]/30 text-white active:scale-95 transition-transform">
-                  {item.icon}
-                </button>
-              );
-            }
-
-            return item.path ? (
-              <Link
-                key={item.name}
-                href={item.path}
-                className={`flex flex-col items-center gap-1 ${
-                  isActive ? "text-[#9b5c12]" : "text-[#9b5c12]/40"
-                }`}>
-                {item.icon}
-                <span className="text-[10px] font-bold">{item.name}</span>
-              </Link>
-            ) : (
-              <button
-                key={item.name}
-                onClick={item.action}
-                className="flex flex-col items-center gap-1 text-[#9b5c12]/40">
-                {item.icon}
-                <span className="text-[10px] font-bold">{item.name}</span>
-              </button>
-            );
-          })}
+      {/* --- MOBILE: Tab Bar --- */}
+      <nav
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-1000 bg-[#fdfaf1]/95 backdrop-blur-xl border-t border-[#9b2d30]/30 ${
+          scrollDirection === "down" ? "translate-y-full" : "translate-y-0"
+        }`}>
+        <div className="flex justify-around items-center h-[64px] pb-safe">
+          {navItems.map((item) => renderNavItem(item))}
         </div>
       </nav>
 
-      {/* DESKTOP TOP NAV (Optional but good for Mid/Large) */}
-      <nav className="hidden md:flex fixed top-0 left-0 right-0 z-[90] bg-[#fdfaf1]/80 backdrop-blur-md border-b border-[#b99b6b]/10 px-8 py-4 justify-between items-center">
-        <div className="text-[#9b5c12] font-black italic font-serif">
-          Hinsete Seb
+      {/* --- DESKTOP: Sidebar --- */}
+      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-24 flex-col items-center py-10 z-[100] bg-[#fdfaf1] border-r border-[#9b2d30]/10">
+        <div className="mb-12">
+          <div className="w-12 h-12 bg-[#9b2d30] rounded-2xl flex items-center justify-center text-[#fdfaf1] font-black text-xl italic shadow-lg shadow-[#9b2d30]/20">
+            H
+          </div>
         </div>
-        <div className="flex gap-8">{/* Desktop Links here */}</div>
-      </nav>
 
-      {/* FULL SCREEN MODALS (No "X" - controlled by internal "Done" buttons) */}
-      {activeModal === "feedback" && (
-        <Feedback onClose={() => setActiveModal(null)} />
-      )}
-      {activeModal === "about" && (
-        <About onClose={() => setActiveModal(null)} />
-      )}
+        <div className="flex flex-col gap-10">
+          {navItems.map((item) => renderNavItem(item, true))}
+        </div>
+      </aside>
     </>
   );
 }
