@@ -6,5 +6,5 @@ import { useRouter } from "next/navigation";
 export default function ThanksPageRoute() {
   const router = useRouter();
 
-  return <Thanks onClose={() => router.back()} />;
+  return <Thanks />;
 }

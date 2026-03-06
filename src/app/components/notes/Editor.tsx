@@ -54,7 +54,12 @@ export default function Editor({ content, onUpdate, editorRef }: EditorProps) {
     editorProps: {
       attributes: {
         className:
-          "prose prose-lg w-full max-w-full focus:outline-none min-h-[400px] p-8 scroll-smooth break-words bg-white rounded-lg shadow-sm",
+          "prose prose-lg w-full max-w-full focus:outline-none min-h-[400px] p-8 scroll-smooth break-words bg-white rounded-lg shadow-sm select-text cursor-text",
+      },
+      handleDOMEvents: {
+        mousedown: () => {
+          return false;
+        },
       },
     },
 

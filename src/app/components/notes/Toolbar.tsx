@@ -236,7 +236,7 @@ const Toolbar: FC<ToolbarProps> = ({ editor }) => {
             }}
             className="bg-[#f4ece1] border border-[#9b2d30]/30 rounded-lg shadow-2xl p-3 min-w-[200px] md:min-w-[240px]">
             <div className="flex justify-end mb-2">
-              <button onClick={closePopup}>
+              <button title="close" onClick={closePopup}>
                 <X size={16} />
               </button>
             </div>
@@ -270,6 +270,7 @@ const Toolbar: FC<ToolbarProps> = ({ editor }) => {
                 <div className="flex gap-2 flex-wrap">
                   {COLORS.map((c) => (
                     <button
+                      title="applay"
                       key={c}
                       onClick={() => applyColor(c)}
                       className="w-7 h-7 rounded-full border border-black/10"

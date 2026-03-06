@@ -52,6 +52,7 @@ const HistoryDrawer: FC<HistoryDrawerProps> = ({
         </div>
 
         <button
+          title="close"
           onClick={onClose}
           className="p-2 active:bg-[#9b2d30]/10 rounded-full transition-all">
           <ChevronLeft size={24} className="text-[#3d1c1d]" />
@@ -152,6 +153,7 @@ const HistoryDrawer: FC<HistoryDrawerProps> = ({
                         </div>
 
                         <button
+                          title="delete"
                           onClick={(e) => {
                             e.stopPropagation();
                             setDeletingId(note.id);

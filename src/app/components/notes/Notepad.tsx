@@ -1,4 +1,5 @@
 // src/app/components/notes/Notepad.tsx
+// src/app/components/notes/Notepad.tsx
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -17,10 +18,12 @@ import Toolbar from "./Toolbar";
 import HistoryDrawer from "./HistoryDrawer";
 import { useNotes } from "@/hooks/useNotes";
 import { NoteRepository } from "@/lib/db/repository";
+// የኢትዮጵያ ቀን አቆጣጠር ፋንክሽን ማስገባት
+import {
+  formatAmharicDate,
+  ETHIOPIAN_WEEKDAYS,
+} from "@/lib/utils/ethiopianCalendar";
 
-// ─────────────────────────────────────────────
-// Types & Props
-// ─────────────────────────────────────────────
 interface NotepadProps {
   isOpen: boolean;
   onClose: () => void;
@@ -41,9 +44,6 @@ interface HistoryNoteItem {
   chapterId?: string;
 }
 
-// ─────────────────────────────────────────────
-// Main Component
-// ─────────────────────────────────────────────
 export default function Notepad({
   isOpen,
   onClose,
@@ -55,16 +55,12 @@ export default function Notepad({
   password,
   onGoToPage,
 }: NotepadProps) {
-  // ── Active Note State ───────────────────────────────
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
-
-  // ── History Drawer State ────────────────────────────
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [historyNotes, setHistoryNotes] = useState<HistoryNoteItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [rawNotes, setRawNotes] = useState<any[]>([]); // full note objects for jumping
+  const [rawNotes, setRawNotes] = useState<any[]>([]);
 
-  // ── Editor Setup ───────────────────────────────────
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -91,16 +87,14 @@ export default function Notepad({
     immediatelyRender: false,
   });
 
-  // ── Notes Hook: Encrypted / Decrypted Content ──────
   const { content, title, setTitle, saveNote, isLoading } = useNotes({
     userId: userId || "guest_user",
     chapterId: chapterId || "unknown",
     pageIndex: pageIndex ?? 0,
     password: password || "fallback_pass",
-    noteId: activeNoteId, // load specific note if selected
+    noteId: activeNoteId,
   });
 
-  // ── Load Decrypted Content into Editor ─────────────
   useEffect(() => {
     if (!editor || content === undefined) return;
     if (editor.getHTML() !== content) {
@@ -110,25 +104,20 @@ export default function Notepad({
     }
   }, [content, editor]);
 
-  // ── Debounced Auto-Save (600ms) ────────────────────
   const debouncedSave = useMemo(() => {
     let timer: NodeJS.Timeout | null = null;
-
     const save = (html: string, title: string) => {
       if (!html.trim() || html === "<p></p>") return;
       saveNote(html, title);
       onSave(html, title);
     };
-
     const debounced = (html: string, title: string) => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => save(html.trim(), title), 600);
     };
-
     debounced.cancel = () => {
       if (timer) clearTimeout(timer);
     };
-
     return debounced;
   }, [saveNote, onSave]);
 
@@ -142,10 +131,8 @@ export default function Notepad({
     };
   }, [editor, debouncedSave, title]);
 
-  // ── Note History Loading ───────────────────────────
   useEffect(() => {
     if (!isHistoryOpen || !userId) return;
-
     let mounted = true;
     setHistoryLoading(true);
 
@@ -153,24 +140,24 @@ export default function Notepad({
       try {
         const notes = await NoteRepository.getAllUserNotes(userId);
         if (!mounted) return;
-
         setRawNotes(notes);
 
-        const formatted = notes.map((n) => ({
-          id: n.id,
-          pageIndex: n.pageIndex,
-          chapterId: n.chapterId,
-          title:
-            n.title ||
-            `ምዕራፍ ${n.chapterId} • ገጽ ${Number(n.pageIndex ?? 0) + 1}`,
-          date: new Date(n.updatedAt).toLocaleDateString("am-ET", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        }));
+        const formatted = notes.map((n) => {
+          const d = new Date(n.updatedAt);
+          // Ethiopian date
+          const ethDayName = ETHIOPIAN_WEEKDAYS[d.getDay()];
+          const ethFullDate = formatAmharicDate(d, true);
+
+          return {
+            id: n.id,
+            pageIndex: n.pageIndex,
+            chapterId: n.chapterId,
+            title:
+              n.title ||
+              `ምዕራፍ ${n.chapterId} • ገጽ ${Number(n.pageIndex ?? 0) + 1}`,
+            date: `${ethDayName} ፣ ${ethFullDate} `,
+          };
+        });
 
         setHistoryNotes(formatted);
       } catch (err) {
@@ -179,13 +166,11 @@ export default function Notepad({
         if (mounted) setHistoryLoading(false);
       }
     })();
-
     return () => {
       mounted = false;
     };
   }, [isHistoryOpen, userId]);
 
-  // ── Handle Outside Click for History Drawer ────────
   const drawerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -198,39 +183,29 @@ export default function Notepad({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isHistoryOpen]);
 
-  // ── Create New Note ───────────────────────────────
   const handleCreateNew = () => {
-    setActiveNoteId(null); // reset current note
-    setTitle(""); // clear title
-    editor?.commands.setContent(""); // clear editor
+    setActiveNoteId(null);
+    setTitle("");
+    editor?.commands.setContent("");
     setIsHistoryOpen(false);
   };
 
-  if (!editor) return null;
-
-  // ── Delete Note ───────────────────────────────
   const handleDeleteNote = async (noteId: string) => {
     try {
       await NoteRepository.deleteNote(noteId);
-
-      // Update the local list so it disappears instantly
       setHistoryNotes((prev) => prev.filter((n) => n.id !== noteId));
-
-      // If we are currently editing the deleted note, reset to a new one
-      if (activeNoteId === noteId) {
-        handleCreateNew();
-      }
+      if (activeNoteId === noteId) handleCreateNew();
     } catch (err) {
       console.error("Failed to delete note:", err);
     }
   };
 
-  // ── Render ────────────────────────────────────────
+  if (!editor) return null;
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -239,20 +214,18 @@ export default function Notepad({
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-9998"
           />
 
-          {/* Main Notepad Drawer */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 240 }}
             className="fixed inset-x-0 bottom-0 z-9999 bg-[#fdf8f2] max-h-[94vh] rounded-t-3xl flex flex-col shadow-2xl border-t-4 border-[#9b2d30]/80">
-            {/* Header */}
+            {/* Header - Original */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#9b2d30]/20 bg-linear-to-b from-[#fdfaf7] to-[#fdf8f2]">
               <h2 className="text-xs font-semibold text-[#3d1c1d] flex items-center gap-3">
                 <BookOpenText size={22} className="text-[#9b2d30]" />
                 የሕንጸት ማስታወሻ
               </h2>
-
               <div className="flex gap-3">
                 <button
                   onClick={() => setIsHistoryOpen(true)}
@@ -267,7 +240,7 @@ export default function Notepad({
               </div>
             </div>
 
-            {/* Title Input + New Note Button */}
+            {/* Title Section - Original */}
             <div className="px-6 py-2 bg-[#fdf8f2] border-b border-[#9b2d30]/10 flex items-center gap-4">
               <input
                 type="text"
@@ -287,13 +260,14 @@ export default function Notepad({
               </button>
             </div>
 
-            {/* History Drawer */}
+            {/* History Drawer Overlay - Original */}
             <AnimatePresence>
               {isHistoryOpen && (
                 <motion.div
                   initial={{ x: "-100%" }}
                   animate={{ x: 0 }}
                   exit={{ x: "-100%" }}
+                  style={{ touchAction: "none", userSelect: "auto" }}
                   transition={{ duration: 0.28, ease: "easeOut" }}
                   className="absolute inset-y-0 left-0 w-5/6 sm:w-96 bg-[#fdfaf7] shadow-2xl z-10000 flex flex-col border-r border-[#9b2d30]/15 rounded-r-2xl overflow-hidden"
                   ref={drawerRef}>
@@ -302,7 +276,6 @@ export default function Notepad({
                       ያሉ ማስታወሻዎች
                     </h3>
                   </div>
-
                   {historyLoading ? (
                     <div className="flex-1 flex items-center justify-center">
                       <Loader2 className="w-8 h-8 text-[#9b2d30] animate-spin" />
@@ -317,9 +290,8 @@ export default function Notepad({
                       notes={historyNotes}
                       onSelect={(selectedId) => {
                         const note = rawNotes.find((n) => n.id === selectedId);
-                        if (note?.pageIndex !== undefined && onGoToPage) {
+                        if (note?.pageIndex !== undefined && onGoToPage)
                           onGoToPage(note.pageIndex);
-                        }
                         setActiveNoteId(selectedId);
                         setIsHistoryOpen(false);
                       }}
@@ -331,28 +303,28 @@ export default function Notepad({
               )}
             </AnimatePresence>
 
-            {/* Toolbar */}
             <Toolbar editor={editor} />
 
             {/* Editor Area */}
-            <div className="flex-1 overflow-y-auto px-6 sm:px-10 py-10 bg-[#fdf8f2] relative">
+            <div className="flex-1 overflow-y-auto px-6 sm:px-10 py-10 bg-[#fdf8f2] relative cursor-text">
               <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[url('/assets/images/parchment-subtle.webp')] bg-repeat" />
-              <div className="relative z-10 max-w-3xl mx-auto prose prose-[--tw-prose-body:#3d1c1d] prose-headings:text-[#3d1c1d] prose-headings:font-serif prose-p:leading-[1.85] prose-p:text-[1.08rem] prose-li:text-[1.08rem] prose-headings:tracking-tight focus:outline-none">
-                <EditorContent editor={editor} />
+
+              <div
+                className="relative z-10 max-w-7xl mx-auto"
+                onPointerDownCapture={(e) => e.stopPropagation()}>
+                <div className="prose prose-[--tw-prose-body:#3d1c1d] prose-headings:text-[#3d1c1d] prose-headings:font-serif prose-p:leading-[1.85] focus:outline-none min-h-dvh">
+                  <EditorContent
+                    editor={editor}
+                    className="min-h-dvh outline-none"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Footer */}
+            {/* Footer - Original */}
             <div className="p-5 border-t border-[#9b2d30]/15 bg-linear-to-t from-[#fdfaf7] to-[#fdf8f2] flex justify-end gap-4">
               <button
-                onClick={() => {
-                  const html = editor.getHTML().trim();
-                  if (html && html !== "<p></p>") {
-                    // onClose(); // already auto-saved
-                  } else {
-                    // onClose();
-                  }
-                }}
+                onClick={() => saveNote(editor.getHTML(), title)}
                 disabled={isLoading}
                 className="px-8 py-3 bg-[#9b2d30] hover:bg-[#7f2428] text-white rounded-xl font-medium shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95">
                 {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
