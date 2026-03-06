@@ -77,7 +77,7 @@ export default function Navbar() {
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-24 flex-col items-center py-10 z-[100] bg-[#fdfaf1] border-r border-[#9b2d30]/10">
         <div className="mb-12">
           <div className="w-12 h-12 bg-[#9b2d30] rounded-2xl flex items-center justify-center text-[#fdfaf1] font-black text-xl italic shadow-lg shadow-[#9b2d30]/20">
-            H
+            H♱S
           </div>
         </div>
 

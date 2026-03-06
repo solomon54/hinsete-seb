@@ -19,10 +19,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+  // 1. ALL HOOKS MUST BE AT THE TOP
   const { user, loading: authLoading } = useAuth();
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
 
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [name, setname] = useState("");
@@ -30,7 +32,7 @@ export default function ProfilePage() {
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarError, setAvatarError] = useState(false); // for broken URLs
+  const [avatarError, setAvatarError] = useState(false);
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -40,21 +42,31 @@ export default function ProfilePage() {
     text: string;
   } | null>(null);
 
-  // ── Initialize name + reset avatar error when user changes ──
+  // 2. ALL USEEFFECTS
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !authLoading && !user) {
+      router.replace("/auth");
+    }
+  }, [mounted, authLoading, user, router]);
+
   useEffect(() => {
     if (user?.name || user?.display_name) {
       setname(user.name || user.display_name || "");
     }
-    if (user?.avatarUrl) setAvatarError(false); // new photo = reset error state
+    if (user?.avatarUrl) setAvatarError(false);
   }, [user]);
 
-  // Cleanup object URLs
   useEffect(() => {
     return () => {
       if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     };
   }, [avatarPreview]);
 
+  // 3. ALL CALLBACKS & HELPERS
   const getInitials = (fullName: string) => {
     const parts = fullName.trim().split(/\s+/);
     if (parts.length >= 2) {
@@ -74,7 +86,6 @@ export default function ProfilePage() {
   }, []);
 
   const compressImage = useCallback(async (file: File): Promise<File> => {
-    // (unchanged - your excellent compression logic)
     const dataUrl = await new Promise<string>((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
@@ -134,7 +145,6 @@ export default function ProfilePage() {
     [compressImage, avatarPreview]
   );
 
-  // ── REMOVE PHOTO ──
   const handleRemovePhoto = useCallback(async () => {
     if (!user?.id) return;
     if (!confirm("ፎቶውን መሰረዝ ይፈልጋሉ?")) return;
@@ -159,7 +169,7 @@ export default function ProfilePage() {
       setAvatarError(true);
       setMessage({ type: "success", text: "ፎቶው ተሰርዟል!" });
 
-      router.refresh(); // useAuth will pick up the null avatarUrl
+      router.refresh();
     } catch (err: any) {
       setMessage({ type: "error", text: "ፎቶውን መሰረዝ አልተሳካም" });
     } finally {
@@ -232,14 +242,19 @@ export default function ProfilePage() {
     router.push("/auth");
   }, [router, supabase.auth]);
 
-  if (authLoading)
+  // 4. NOW EARLY RETURNS ARE SAFE
+  if (!mounted || authLoading) {
     return (
       <div className="flex items-center justify-center h-screen italic font-serif text-[#9b2d30]">
         በመጫን ላይ...
       </div>
     );
+  }
 
-  if (!user) return null;
+  // If we've finished loading and there's no user, return null while the router redirects
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#fdfaf1] p-6 pb-24">
@@ -266,7 +281,6 @@ export default function ProfilePage() {
           )}
 
           <div className="flex flex-col items-center text-center">
-            {/* ── IMPROVED AVATAR WITH PREVIEW, ERROR HANDLING & REMOVE ── */}
             <div className="relative w-28 h-28 mb-4">
               <div
                 role="button"
@@ -280,7 +294,6 @@ export default function ProfilePage() {
                 }}
                 className="w-28 h-28 rounded-full overflow-hidden border-2 border-[#9b2d30]/20 bg-[#9b2d30]/10 flex items-center justify-center cursor-pointer active:scale-95 transition"
                 aria-label="Change avatar">
-                {/* Priority 1: Local preview */}
                 {avatarPreview ? (
                   <img
                     src={avatarPreview}
@@ -288,7 +301,6 @@ export default function ProfilePage() {
                     alt="Preview"
                   />
                 ) : user?.avatarUrl && !avatarError ? (
-                  /* Priority 2: Stored avatar with error fallback */
                   <img
                     src={user.avatarUrl}
                     className="w-full h-full object-cover"
@@ -297,7 +309,6 @@ export default function ProfilePage() {
                     onError={() => setAvatarError(true)}
                   />
                 ) : (
-                  /* Priority 3: Initials or generic icon */
                   <div className="flex flex-col items-center justify-center w-full h-full bg-[#9b2d30]/5">
                     {name ? (
                       <span className="text-4xl font-black text-[#9b2d30]">
@@ -310,7 +321,6 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Camera button */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -324,7 +334,6 @@ export default function ProfilePage() {
                 )}
               </button>
 
-              {/* Remove button - only when photo exists */}
               {(avatarPreview || (user?.avatarUrl && !avatarError)) && (
                 <button
                   type="button"
@@ -365,7 +374,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Contact info */}
           <div className="mt-8 space-y-4 text-[#3d1c1d]/60">
             <div className="flex items-center gap-4">
               <Mail size={18} />
@@ -382,7 +390,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* Edit Form (unchanged except nameError handling) */}
+        {/* Edit Form */}
         <form
           onSubmit={handleUpdateProfile}
           className="bg-white rounded-3xl p-8 border border-[#9b2d30]/10 shadow-sm space-y-4"
