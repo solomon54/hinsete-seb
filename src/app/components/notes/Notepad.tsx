@@ -1,5 +1,4 @@
 // src/app/components/notes/Notepad.tsx
-// src/app/components/notes/Notepad.tsx
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -18,7 +17,7 @@ import Toolbar from "./Toolbar";
 import HistoryDrawer from "./HistoryDrawer";
 import { useNotes } from "@/hooks/useNotes";
 import { NoteRepository } from "@/lib/db/repository";
-// የኢትዮጵያ ቀን አቆጣጠር ፋንክሽን ማስገባት
+
 import {
   formatAmharicDate,
   ETHIOPIAN_WEEKDAYS,
@@ -83,8 +82,16 @@ export default function Notepad({
         placeholder: "የሕንጸት ማስታወሻዎን እዚህ ይጀምሩ...",
       }),
     ],
+
     content: initialContent,
     immediatelyRender: false,
+
+    editorProps: {
+      attributes: {
+        class:
+          "prose prose-lg w-full max-w-full focus:outline-none break-words select-text cursor-text",
+      },
+    },
   });
 
   const { content, title, setTitle, saveNote, isLoading } = useNotes({
@@ -186,7 +193,11 @@ export default function Notepad({
   const handleCreateNew = () => {
     setActiveNoteId(null);
     setTitle("");
-    editor?.commands.setContent("");
+
+    if (editor) {
+      editor.commands.setContent("");
+    }
+
     setIsHistoryOpen(false);
   };
 
@@ -220,7 +231,7 @@ export default function Notepad({
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 240 }}
             className="fixed inset-x-0 bottom-0 z-9999 bg-[#fdf8f2] max-h-[94vh] rounded-t-3xl flex flex-col shadow-2xl border-t-4 border-[#9b2d30]/80">
-            {/* Header - Original */}
+            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#9b2d30]/20 bg-linear-to-b from-[#fdfaf7] to-[#fdf8f2]">
               <h2 className="text-xs font-semibold text-[#3d1c1d] flex items-center gap-3">
                 <BookOpenText size={22} className="text-[#9b2d30]" />
@@ -240,7 +251,7 @@ export default function Notepad({
               </div>
             </div>
 
-            {/* Title Section - Original */}
+            {/* Title Section */}
             <div className="px-6 py-2 bg-[#fdf8f2] border-b border-[#9b2d30]/10 flex items-center gap-4">
               <input
                 type="text"
@@ -260,7 +271,7 @@ export default function Notepad({
               </button>
             </div>
 
-            {/* History Drawer Overlay - Original */}
+            {/* History Drawer Overlay  */}
             <AnimatePresence>
               {isHistoryOpen && (
                 <motion.div
@@ -309,9 +320,7 @@ export default function Notepad({
             <div className="flex-1 overflow-y-auto px-6 sm:px-10 py-10 bg-[#fdf8f2] relative cursor-text">
               <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[url('/assets/images/parchment-subtle.webp')] bg-repeat" />
 
-              <div
-                className="relative z-10 max-w-7xl mx-auto"
-                onPointerDownCapture={(e) => e.stopPropagation()}>
+              <div className="relative z-10 max-w-7xl mx-auto">
                 <div className="prose prose-[--tw-prose-body:#3d1c1d] prose-headings:text-[#3d1c1d] prose-headings:font-serif prose-p:leading-[1.85] focus:outline-none min-h-dvh">
                   <EditorContent
                     editor={editor}
@@ -321,7 +330,7 @@ export default function Notepad({
               </div>
             </div>
 
-            {/* Footer - Original */}
+            {/* Footer  */}
             <div className="p-5 border-t border-[#9b2d30]/15 bg-linear-to-t from-[#fdfaf7] to-[#fdf8f2] flex justify-end gap-4">
               <button
                 onClick={() => saveNote(editor.getHTML(), title)}
