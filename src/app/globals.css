@@ -392,19 +392,13 @@ img {
 }
 
 
-/* ከሁሉም ፋይሎች በታች ጨምረው */
+/* Force enable selection for Notepad */
 .ProseMirror {
   user-select: text !important;
   -webkit-user-select: text !important;
   -moz-user-select: text !important;
   -ms-user-select: text !important;
   pointer-events: auto !important;
-  outline: none !important;
-}
-
-.ProseMirror ::selection {
-  background-color: rgba(155, 45, 48, 0.2) !important;
-  color: inherit !important;
 }
 
 /*  ──────────────────────────────────────────────

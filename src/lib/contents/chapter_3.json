@@ -50,8 +50,12 @@
           "content": "ስንፍና ወይም ነገሮችን 'ለነገ ማሳደር' (Procrastination) የተማሪው ትልቅ ጠላት ነው። ይህ በባሕርያችን የሚታይ ዳተኝነት በአእምሯችን ውስጥ ባሉ ሁለት ክፍሎች ግብግብ የሚፈጠር ነው፦"
         },
         {
-          "type": "text",
-          "content": "1. **ስሜታዊው ክፍል (Limbic system)**፦ ይህ ክፍል ፈጣን ደስታንና ምቾትን ይፈልጋል።\n2. **አመክንዮአዊው ክፍል (Prefrontal Cortex)**፦ ይህ የአንጎላችን የፊት ክፍል ደግሞ ውሳኔ ሰጪና ለወደፊት ግብ የሚያቅድ ነው።"
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**ስሜታዊው ክፍል (Limbic system)**፦ ይህ ክፍል ፈጣን ደስታንና ምቾትን ይፈልጋል።",
+            "**አመክንዮአዊው ክፍል (Prefrontal Cortex)**፦ ይህ የአንጎላችን የፊት ክፍል ደግሞ ውሳኔ ሰጪና ለወደፊት ግብ የሚያቅድ ነው።"
+          ]
         },
         {
           "type": "quote",
@@ -73,7 +77,7 @@
         },
         {
           "type": "image",
-          "url": "https://example.com/assets/priority_matrix_diagram.png",
+          "url": "https://cdn.venngage.com/template/thumbnail/small/ef07c76c-9562-461d-891f-0ffe727f1cc5.webp",
           "caption": "Priority Matrix Diagram (Urgent vs Important)"
         },
         {
@@ -129,12 +133,16 @@
         },
         {
           "type": "image",
-          "url": "https://example.com/assets/pomodoro_technique_steps.png",
+          "url": "https://luxafor.co.uk/wp-content/uploads/2020/07/the-Pomodoro-Technique-3.png",
           "caption": "The Pomodoro Technique: 25 min work / 5 min break"
         },
         {
-          "type": "text",
-          "content": "1. **የፖሞዶሮ ቴክኒክ (The Pomodoro Technique)**፦ ለ25 ደቂቃ በሙሉ ትኩረት አጥና፣ ከዚያም ለ5 ደቂቃ ዕረፍት አድርግ።\n2. **ንቁ ንባብ (Active Recall)**፦ ያነበብከውን ክፍል መጽሐፉን ዘግተህ በራስህ ቃል ለማብራራት መሞከር እውቀቱ ከውስጥህ ጋር እንዲዋሃድ ያደርገዋል።"
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "**የፖሞዶሮ ቴክኒክ (The Pomodoro Technique)**፦ ለ25 ደቂቃ በሙሉ ትኩረት አጥና፣ ከዚያም ለ5 ደቂቃ ዕረፍት አድርግ።",
+            "**ንቁ ንባብ (Active Recall)**፦ ያነበብከውን ክፍል መጽሐፉን ዘግተህ በራስህ ቃል ለማብራራት መሞከር እውቀቱ ከውስጥህ ጋር እንዲዋሃድ ያደርገዋል።"
+          ]
         },
         {
           "type": "text",
@@ -167,8 +175,13 @@
           "content": "እውነተኛ መማር በጭንቅላት ከመያዝ አልፎ በልብ እስከመሰማትና በተግባር እስከመታየት የሚደርስ ሂደት ነው፦"
         },
         {
-          "type": "text",
-          "content": "- **መረጃ (Information)**: በንባብ የምናገኛቸው ድፍን እውነታዎች።\n- **እውቀት (Knowledge)**: መረጃውን ተረድቶ ከሌሎች ነገሮች ጋር ማዛመድ።\n- **ጥበብ (Wisdom)**: እውቀትን በፈሪሃ እግዚአብሔር መግራትና ለፍቅር አገልግሎት ማዋል ነው።"
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "**መረጃ (Information)**: በንባብ የምናገኛቸው ድፍን እውነታዎች።",
+            "**እውቀት (Knowledge)**: መረጃውን ተረድቶ ከሌሎች ነገሮች ጋር ማዛመድ።",
+            "**ጥበብ (Wisdom)**: እውቀትን በፈሪሃ እግዚአብሔር መግራትና ለፍቅር አገልግሎት ማዋል ነው።"
+          ]
         },
         {
           "type": "text",
@@ -176,7 +189,16 @@
         },
         {
           "type": "text",
-          "content": "**እውቀትን ወደ ጥበብ የመለወጥ ሦስቱ ማጣሪያዎች፦**\n1. ማሰላሰል (Reflection)\n2. ትሕትና (Humility)\n3. ተግባራዊ አገልግሎት (Service)"
+          "content": "**እውቀትን ወደ ጥበብ የመለወጥ ሦስቱ ማጣሪያዎች፦**"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "ማሰላሰል (Reflection)",
+            "ትሕትና (Humility)",
+            "ተግባራዊ አገልግሎት (Service)"
+          ]
         }
       ]
     },
@@ -189,23 +211,26 @@
         },
         {
           "type": "action_plan",
-          "id": "ap_3_1",
+          "id": "ap_1_1",
           "content": "የማለዳ ስጦታ (Deep Work)፦ በየቀኑ ጠዋት አእምሮህ ትኩስ በሚሆንበት ሰዓት፣ ስልክህን አጥፍተህ ለ፪ ሰዓት ያህል በጣም አስቸጋሪውን ትምህርት በጥልቀት አጥና።"
         },
         {
           "type": "action_plan",
-          "id": "ap_3_2",
+          "id": "ap_1_2",
           "content": "የጸሎተ መጽሐፍ ልማድ፦ ጥናት ከመጀመርህ በፊት 'የጥበብ ምንጭ የሆንክ ጌታ ሆይ! አእምሮዬን አብራልኝ' ብለህ ጸልይ።"
         },
         {
           "type": "action_plan",
-          "id": "ap_3_3",
+          "id": "ap_1_3",
           "content": "የታማኝነት ቃል ኪዳን፦ በማንኛውም የፈተና ሂደት ውስጥ ፩% እንኳ ላለማጭበርበርና በራስህ ድካም ብቻ ለመውጣት ለራስህና ለፈጣሪህ ቃል ግባ።"
         },
         {
           "type": "action_plan",
-          "id": "ap_3_4",
+          "id": "ap_1_4",
           "content": "የዕለቱ ማሰላሰል (Reflection)፦ ማታ ከመተኛትህ በፊት 'ዛሬ ከተማርኩት ትምህርት ውስጥ ሰዎችን ለመርዳት የሚጠቅም ምን እውቀት አገኘሁ?' ብለህ ራስህን ጠይቅ።"
+        },
+        {
+          "type": "spacer"
         },
         {
           "type": "subtitle",
@@ -213,7 +238,11 @@
         },
         {
           "type": "text",
-          "content": "\"እኔ (ስምህ)፣ የተሰጠኝን የአእምሮ መክሊት ላለማቀበርና ለፈጣሪዬ ክብር እንድሆን በትምህርቴ በትጋትና በታማኝነት ለመጋደል ወስኛለሁ። ስንፍናን በትጋት፣ ማጭበርበርን በታማኝነት አሸንፋለሁ። አምላኬ ሆይ! ለቤተክርስቲያኔና ለወገኔ የምተርፍ ባለሙያ እንድሆን ጥበብንና ጽናትን ስጠኝ።\""
+          "content": "\"እኔ (___)፣ የተሰጠኝን የአእምሮ መክሊት ላለማቀበርና ለፈጣሪዬ ክብር እንድሆን በትምህርቴ በትጋትና በታማኝነት ለመጋደል ወስኛለሁ። ስንፍናን በትጋት፣ ማጭበርበርን በታማኝነት አሸንፋለሁ። አምላኬ ሆይ! ለቤተክርስቲያኔና ለወገኔ የምተርፍ ባለሙያ እንድሆን ጥበብንና ጽናትን ስጠኝ።\""
+        },
+        {
+          "type": "signed-line",
+          "label": "**የቃል ኪዳን ማኅተም (Signature)**፦"
         }
       ]
     }
