@@ -11,12 +11,15 @@ import {
   ShieldCheck,
   ShieldAlert,
 } from "lucide-react";
-import { supabase } from "@/lib/db/supabase";
+import { createClient } from "@/lib/db/browser-client";
+import { useRouter } from "next/navigation";
 
 export function UserNav() {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const supabase = createClient();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -29,8 +32,15 @@ export function UserNav() {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/auth";
+    try {
+      setIsOpen(false);
+      await supabase.auth.signOut();
+      // Use window.location for a hard reset of the auth state
+      window.location.href = "/auth";
+    } catch (error) {
+      console.error("Logout failed:", error);
+      window.location.href = "/auth";
+    }
   };
 
   if (!user) return null;
@@ -40,7 +50,6 @@ export function UserNav() {
   const initials = displayName.substring(0, 2).toUpperCase();
   const avatarUrl = user.avatarUrl;
 
-  // Premium role badge styles
   const roleBadge = isOwner
     ? {
         bg: "bg-gradient-to-r from-amber-600 to-amber-400",
@@ -56,8 +65,7 @@ export function UserNav() {
       };
 
   return (
-    <div className="relative inline-block" ref={menuRef}>
-      {/* Avatar Button – no focus outline, perfect circle */}
+    <div className="right-2 top-2 inline-block fixed z-[100]" ref={menuRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -79,26 +87,27 @@ export function UserNav() {
           )}
         </div>
       </button>
-      {/* Live status dot – positioned exactly on the outer border */}
+
+      {/* RESTORED: Live status dot */}
       <span
         className={`
-      absolute bottom-px -right-px
-      w-2.5 h-2.5 md:w-2.75 md:h-2.75
-      rounded-full
-      border-[1.5px] border-[#fdfaf1]
-      shadow-[0_1px_3px_rgba(0,0,0,0.2)]
-      transition-all duration-200
-      group-hover:scale-110 group-active:scale-100
-      ${
-        isOwner
-          ? "bg-violet-600 ring-1 ring-violet-600"
-          : "bg-emerald-600 ring-1 ring-emerald-600"
-      }
-    `}
+          absolute bottom-px -right-px
+          w-2.5 h-2.5 md:w-2.75 md:h-2.75
+          rounded-full
+          border-[1.5px] border-[#fdfaf1]
+          shadow-[0_1px_3px_rgba(0,0,0,0.2)]
+          transition-all duration-200
+          z-[101]
+          ${
+            isOwner
+              ? "bg-violet-600 ring-1 ring-violet-600"
+              : "bg-emerald-600 ring-1 ring-emerald-600"
+          }
+        `}
         aria-hidden="true"
       />
 
-      {/* Dropdown Menu – modern, premium look */}
+      {/* Dropdown Menu */}
       {isOpen && (
         <div
           className="absolute right-0 mt-3 w-72 bg-white/95 backdrop-blur-xl border border-[#9b2d30]/15 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 origin-top-right z-[120]"
@@ -119,7 +128,6 @@ export function UserNav() {
               </div>
             </div>
 
-            {/* Role Badge */}
             <div
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide shadow-sm ${roleBadge.bg} ${roleBadge.text}`}>
               {roleBadge.icon}
@@ -147,17 +155,8 @@ export function UserNav() {
               የግል መረጃ (Profile)
             </Link>
 
-            {/* Settings – disabled / hidden since not built */}
-            {/* <div className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-gray-400 cursor-not-allowed">
-              <Settings size={18} />
-              ቅንብሮች (Settings) – በሥራ ላይ
-            </div> */}
-
             <button
-              onClick={() => {
-                setIsOpen(false);
-                handleSignOut();
-              }}
+              onClick={handleSignOut}
               className="w-full flex items-center gap-3 px-5 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors border-t border-[#9b2d30]/10 mt-1 pt-3">
               <LogOut size={18} />
               ውጣ (Logout)
