@@ -1,4 +1,4 @@
-//src/app/components/reader/BookPage.tsx
+// src/app/components/reader/BookPage.tsx
 "use client";
 
 import { motion } from "framer-motion";
@@ -91,7 +91,6 @@ export const BookPage = ({
     }
   };
 
-  // Helper to handle **bold** text consistently
   const renderRichText = (text: string) => {
     if (!text) return "";
     const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -108,7 +107,6 @@ export const BookPage = ({
 
   const isFlipped = sheetIndex < currentSheet;
   const isCurrent = sheetIndex === currentSheet;
-  const isActive = isCurrent || isFlipped;
   const zIndex = isFlipped ? 10 + sheetIndex : 100 - sheetIndex;
 
   const renderContent = (blocks: ContentBlock[]) => {
@@ -148,6 +146,23 @@ export const BookPage = ({
             </div>
           );
 
+        case "poem":
+          return (
+            <div
+              key={idx}
+              className="my-10 px-6 py-8 bg-[#9b2d30]/[0.04] border-x-2 border-[#9b2d30]/10 rounded-3xl relative overflow-hidden">
+              <span className="absolute -top-2 -left-1 text-4xl md:text-7xl text-[#9b2d30]/5 font-serif select-none">
+                “
+              </span>
+              <p className="text-[13px] md:text-[15px] leading-[2.2] text-[#3d1c1d]/90 font-serif whitespace-pre-line italic text-center tracking-wide drop-shadow-[0_0.5px_0.5px_rgba(155,45,48,0.1)]">
+                {renderRichText(block.content || "")}
+              </p>
+              <span className="absolute -bottom-6 -right-1 text-4xl md:text-7xl text-[#9b2d30]/5 font-serif select-none">
+                ”
+              </span>
+            </div>
+          );
+
         case "list": {
           const ListTag = block.ordered ? "ol" : "ul";
           return (
@@ -166,6 +181,8 @@ export const BookPage = ({
           );
         }
 
+        // src/app/components/reader/BookPage.tsx
+
         case "action_plan": {
           const isChecked = optimisticActions.includes(block.id || "");
           return (
@@ -175,14 +192,16 @@ export const BookPage = ({
                 e.stopPropagation();
                 if (block.id) handleActionToggle(block.id);
               }}
-              className={`my-3 p-3 border border-dashed rounded-lg transition-all cursor-pointer select-none
-                ${
-                  isChecked
-                    ? "bg-green-50/80 border-green-500/60"
-                    : "bg-white/60 border-[#9b2d30]/30 hover:bg-[#9b2d30]/5"
-                }`}>
+              className={`my-3 p-3 border border-dashed rounded-lg transition-all select-none relative z-9998 pointer-events-auto cursor-pointer
+        ${
+          isChecked
+            ? "bg-green-50/80 border-green-500/60"
+            : "bg-white/60 border-[#9b2d30]/30 hover:bg-[#9b2d30]/5"
+        }`}
+              style={{ transform: "translateZ(10px)" }}>
               <div className="flex items-start gap-3 pointer-events-none">
                 <input
+                  placeholder="Action"
                   type="checkbox"
                   className="mt-1 w-4 h-4 accent-[#9b2d30]"
                   checked={isChecked}
@@ -217,21 +236,35 @@ export const BookPage = ({
             </div>
           );
 
-        case "image":
+        case "image": {
+          // Check if this is the action-plan image to apply "push" styling
+          const isActionPlanImage =
+            block.url?.includes("action-plan") ||
+            block.caption?.includes("ተግባር");
+
           return (
-            <div key={idx} className="my-6 flex flex-col items-center">
+            <div
+              key={idx}
+              className={`flex flex-col items-center w-full ${
+                isActionPlanImage ? "my-2" : "my-6"
+              }`}>
               <img
                 src={block.url}
-                alt={block.content}
-                className="w-full rounded-lg shadow-sm border border-[#9b2d30]/10"
+                alt={block.content || "divider"}
+                className={`rounded-lg shadow-sm border border-[#9b2d30]/10 object-cover ${
+                  isActionPlanImage
+                    ? "w-[95%] h-32 opacity-75"
+                    : "w-full h-auto"
+                }`}
               />
               {block.caption && (
-                <p className="text-center text-[10px] mt-2 italic opacity-60 font-serif">
+                <p className="text-center text-[10px] mt-1 italic opacity-50 font-serif">
                   {block.caption}
                 </p>
               )}
             </div>
           );
+        }
 
         case "spacer":
           return <div key={idx} className="h-4 md:h-8" />;
@@ -250,30 +283,32 @@ export const BookPage = ({
 
   return (
     <motion.div
-      drag="x"
-      dragPropagation={false}
-      className={`absolute top-0 h-full preserve-3d shadow-2xl ${
-        isDesktop ? "left-1/2 w-1/2" : "left-0 w-full"
+      // THE FIX: We force shadow to none on mobile to stop it from blocking the UI
+      className={`absolute top-0 h-full preserve-3d ${
+        isDesktop ? "left-1/2 w-1/2 shadow-2xl" : "left-0 w-full shadow-none"
       }`}
       style={{
         transformOrigin: "left center",
         zIndex,
-        pointerEvents: isActive ? "auto" : "none",
+        pointerEvents:
+          isCurrent || sheetIndex === currentSheet - 1 ? "auto" : "none",
       }}
-      dragConstraints={{ left: 0, right: 0 }}
-      onDragEnd={(_, info) => {
-        const threshold = 50;
-        if (info.offset.x > threshold) onPrev();
-        else if (info.offset.x < -threshold) onNext();
+      initial={false}
+      animate={{
+        rotateY: isFlipped ? -180 : 0,
+        x: isFlipped ? -0.2 : 0,
       }}
-      animate={{ rotateY: isFlipped ? -180 : 0 }}
       transition={{ duration: 0.9, ease: [0.645, 0.045, 0.355, 1] }}
       onAnimationComplete={onFlipComplete}>
-      <div className="page-surface backface-hidden absolute inset-0 overflow-hidden bg-[#fdf8f2]">
+      {/* FRONT SIDE */}
+      <div
+        className="page-surface backface-hidden absolute inset-0 overflow-hidden bg-[#fdf8f2]"
+        style={{ boxShadow: !isDesktop ? "none" : undefined }}>
+        {/* MOBILE OVERLAY TAP ZONES - Reduced to 15% to give even more room for checkboxes */}
         {!isDesktop && isCurrent && (
-          <div className="absolute inset-0 pointer-events-none z-[3] flex">
+          <div className="absolute inset-0 pointer-events-none z-[50] flex">
             <div
-              className="w-[20%] h-full pointer-events-auto touch-none"
+              className="w-[15%] h-full pointer-events-auto touch-none"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -282,7 +317,7 @@ export const BookPage = ({
             />
             <div className="flex-1 h-full" />
             <div
-              className="w-[20%] h-full pointer-events-auto touch-none"
+              className="w-[15%] h-full pointer-events-auto touch-none"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -291,9 +326,15 @@ export const BookPage = ({
             />
           </div>
         )}
-        <div className="relative flex h-full flex-col p-6 md:p-12">
+
+        {/* This shadow is only for Desktop "spine" effect */}
+        {isDesktop && (
+          <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black/10 to-transparent pointer-events-none z-30" />
+        )}
+
+        <div className="relative flex h-full flex-col p-6 md:p-12 z-10">
           {front && (
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar z-10">
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar relative z-20">
               {renderContent(front.blocks)}
             </div>
           )}
@@ -302,12 +343,21 @@ export const BookPage = ({
           </div>
         </div>
       </div>
+
+      {/* BACK SIDE */}
       <div
         className="page-surface backface-hidden absolute inset-0 overflow-hidden bg-[#fdf8f2]"
-        style={{ transform: "rotateY(180deg)" }}>
-        <div className="relative flex h-full flex-col p-6 md:p-12">
+        style={{
+          transform: "rotateY(180deg)",
+          boxShadow: !isDesktop ? "none" : undefined,
+        }}>
+        {isDesktop && (
+          <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black/10 to-transparent pointer-events-none z-30" />
+        )}
+
+        <div className="relative flex h-full flex-col p-6 md:p-12 z-10">
           {back && (
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar mirrored-content z-10">
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar mirrored-content relative z-20">
               {renderContent(back.blocks)}
             </div>
           )}

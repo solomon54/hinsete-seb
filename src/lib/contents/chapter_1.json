@@ -321,16 +321,24 @@
         {
           "type": "text",
           "content": "ወንድሜ ሆይ! በሕይወትህ ሁሉ ልትከተለው የሚገባህ ጽኑ መርህ ይህ ይሁን፦ \"ከእውቀቴ በላይ ስብዕናዬ፣ ከዲግሪዬ በላይ ማንነቴ ይላቅ!\" ይህንን የሞራል ኮምፓስ ይዘህ ስትወጣ፣ አንተ ለቤተክርስቲያንህና ለሀገርህ ብርሃን ትሆናለህ።"
-        },
-        {
-          "type": "header",
-          "content": "📝 ተግባራዊ ልምምድ (Action Plan)፦ የሳምንቱ ስንቅ"
         }
       ]
     },
     {
       "pageNumber": 13,
       "blocks": [
+        {
+          "type": "header",
+          "content": "📝 ተግባራዊ ልምምድ (Action Plan)፦ የሳምንቱ ስንቅ"
+        },
+        {
+          "type": "image",
+          "url": "/assets/images/action-plan.png",
+          "caption": "የሳምንቱ ስንቅ - የማንነት መግለጫ እና የምስጋና መዝገብ"
+        },
+        {
+          "type": "spacer"
+        },
         {
           "type": "action_plan",
           "id": "ap_1_1",
@@ -345,10 +353,12 @@
           "type": "action_plan",
           "id": "ap_1_3",
           "content": "የምስጋናና የራዕይ መዝገብ (The Mission Log)፦ ዩኒቨርሲቲ ለመግባት እግዚአብሔር የረዳህን ሦስት ትልልቅ አጋጣሚዎች አስብና በምስጋና መዝግብ።"
-        },
-        {
-          "type": "spacer"
-        },
+        }
+      ]
+    },
+    {
+      "pageNumber": 14,
+      "blocks": [
         {
           "type": "subtitle",
           "content": "የግል ማንነት መግለጫ (Personal Mission Statement)"

@@ -144,7 +144,7 @@ export const Book = ({ pages, chapterId, onPageChange }: BookProps) => {
   // ────────────────────────────────────────────────
   useEffect(() => {
     setHasMounted(true);
-    audioRef.current = new Audio("/assets/audio/parchment flip.wav");
+    audioRef.current = new Audio("/assets/audio/parchment-flip.wav");
     audioRef.current.preload = "auto";
   }, []);
 
@@ -249,7 +249,6 @@ export const Book = ({ pages, chapterId, onPageChange }: BookProps) => {
         {/* Desktop: click left/right edges to flip */}
         {isDesktop && (
           <div className="absolute inset-0 flex pointer-events-none z-[500]">
-            {/* Increased z to 500 to clear any Glossary stacking */}
             <div
               className="w-[20%] h-full cursor-w-resize pointer-events-auto bg-transparent"
               onClick={(e) => {
