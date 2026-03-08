@@ -3,7 +3,7 @@
    Production Grade | Persistent | Hardened
 ========================================= */
 
-const VERSION = "v1.1.70";
+const VERSION = "v1.1.0";
 const STATIC_CACHE = `hinsete-static-${VERSION}`;
 const RUNTIME_CACHE = `hinsete-runtime-${VERSION}`;
 
@@ -14,6 +14,7 @@ const STATIC_ASSETS = [
   "/assets/icons/icon-192x192.png",
   "/assets/icons/icon-512x512.png",
   "/assets/images/ennat.jpg",
+  "/assets/images/emma.jpg",
   "/assets/images/parchment-grain.png",
   "/assets/images/parchment-subtle.webp",
   "/assets/audio/parchment-flip.wav",

@@ -1,7 +1,7 @@
 //scr/app/components/reader/CoverPage.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useDragControls } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { BlockType } from "@/app/lessons/[week]/page";
 import { User } from "@/types/user";
@@ -43,13 +43,10 @@ export const CoverPage = ({
   const isActive = isCurrent || isFlipped;
   const zIndex = isFlipped ? 10 + sheetIndex : 100 - sheetIndex;
 
-  const [isInteracting, setIsInteracting] = useState(false);
-
   const renderCoverContent = (
     blocks: CoverContentBlock[],
     isFrontPage: boolean
   ) => {
-    // 1. First, transform all blocks into JSX and store them in 'elements'
     const elements = blocks.map((block, idx) => {
       const content = block.content || "";
 
@@ -98,17 +95,10 @@ export const CoverPage = ({
             return (
               <div key={idx} className="my-4 space-y-2 relative z-50">
                 {content.split("\n").map((line, lIdx) => {
-                  const weekMatch = line.match(/\d+/);
-                  const weekNum = weekMatch ? weekMatch[0] : null;
-
                   return (
                     <div
                       key={lIdx}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (weekNum) router.push(`/lessons/${weekNum}`);
-                      }}
-                      className="flex items-center justify-between p-3 rounded-md border border-[#9b2d30]/10 bg-white/10 shadow-sm cursor-pointer hover:bg-[#9b2d30]/10 active:scale-[0.97] transition-all group">
+                      className="flex items-center justify-between p-3 rounded-md border border-[#9b2d30]/10 bg-white/10 shadow-sm">
                       <span className="text-[12px] md:text-sm text-gray-800 font-medium">
                         {line.split(/(\*\*.*?\*\*)/g).map((part, pIdx) =>
                           part.startsWith("**") ? (
@@ -119,9 +109,6 @@ export const CoverPage = ({
                             part
                           )
                         )}
-                      </span>
-                      <span className="text-[#9b2d30] text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                        ያንብቡ →
                       </span>
                     </div>
                   );
@@ -149,51 +136,49 @@ export const CoverPage = ({
       }
     });
 
-    // 2. Now check if this is the Cover Page (Sheet 0)
     if (isFrontPage && sheetIndex === 0) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[55vh] py-8 text-center">
-          {/* TOP LINE */}
           <div className="w-16 h-[1px] bg-[#9b2d30]/30 mb-6" />
-
           <div className="flex flex-col items-center w-full">{elements}</div>
-
-          {/* BOTTOM LINE */}
           <div className="w-16 h-[1px] bg-[#9b2d30]/30 mt-6" />
         </div>
       );
     }
 
-    // 3. For all other pages, just return the standard elements
     return elements;
   };
 
   return (
     <motion.div
       drag="x"
+      dragDirectionLock
       dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.1}
+      dragMomentum={false}
       onDragEnd={(e, info) => {
-        const threshold = 50;
+        const threshold = 40;
         if (info.offset.x > threshold) onPrev();
         else if (info.offset.x < -threshold) onNext();
       }}
-      className={`absolute top-0 h-full preserve-3d shadow-2xl ${
+      className={`absolute top-0 h-full preserve-3d shadow-2xl touch-none ${
         isDesktop ? "left-1/2 w-1/2" : "left-0 w-full"
       }`}
       style={{
         transformOrigin: "left center",
         zIndex,
         pointerEvents: isActive ? "auto" : "none",
+        touchAction: "pan-y",
       }}
       animate={{ rotateY: isFlipped ? -180 : 0 }}
-      transition={{ duration: 0.8, ease: [0.645, 0.045, 0.355, 1] }}
+      transition={{ duration: 0.8, ease: "circOut" }}
       onAnimationComplete={onFlipComplete}>
       {/* FRONT PAGE */}
       <div className="page-surface backface-hidden absolute inset-0 overflow-hidden bg-[#fdf8f2] border-r border-black/5">
         {!isDesktop && isCurrent && (
           <div className="absolute inset-0 pointer-events-none z-[1] flex">
             <div
-              className="w-[15%] h-full pointer-events-auto cursor-pointer"
+              className="w-[35%] h-full pointer-events-auto cursor-pointer active:bg-black/5 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 onPrev();
@@ -201,7 +186,7 @@ export const CoverPage = ({
             />
             <div className="flex-1 h-full" />
             <div
-              className="w-[15%] h-full pointer-events-auto cursor-pointer"
+              className="w-[35%] h-full pointer-events-auto cursor-pointer active:bg-black/5 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 onNext();
@@ -219,7 +204,7 @@ export const CoverPage = ({
               {renderCoverContent(front.blocks, true)}
             </div>
           )}
-          <div className="text-center text-[9px] opacity-30 mt-2 font-serif">
+          <div className="text-center text-[9px] opacity-60 text-[#9b2d30] font-serif">
             ገጽ {isDesktop ? sheetIndex * 2 + 1 : sheetIndex + 1}
           </div>
         </div>
@@ -235,7 +220,7 @@ export const CoverPage = ({
               {renderCoverContent(back.blocks, false)}
             </div>
           )}
-          <div className="text-center text-[9px] opacity-30 mt-2 font-serif">
+          <div className="text-center text-[9px] opacity-60 text-[#9b2d30] font-serif">
             ገጽ {isDesktop ? sheetIndex * 2 + 2 : sheetIndex + 1}
           </div>
         </div>

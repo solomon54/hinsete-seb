@@ -162,7 +162,7 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* Progress Ring: Scaled slightly for mobile to prevent crowding */}
+          {/* Progress Ring */}
           <div className="flex flex-col items-center gap-2 mt-12 md:mt-16">
             <div className="scale-90 md:scale-100 origin-right">
               <ProgressRing
