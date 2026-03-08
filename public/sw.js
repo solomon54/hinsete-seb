@@ -3,7 +3,7 @@
    Production Grade | Persistent | Hardened
 ========================================= */
 
-const VERSION = "v1.1.0";
+const VERSION = "v1.1.70";
 const STATIC_CACHE = `hinsete-static-${VERSION}`;
 const RUNTIME_CACHE = `hinsete-runtime-${VERSION}`;
 
@@ -16,30 +16,26 @@ const STATIC_ASSETS = [
   "/assets/images/ennat.jpg",
   "/assets/images/parchment-grain.png",
   "/assets/images/parchment-subtle.webp",
-  "/assets/audio/parchment%20flip.wav",
+  "/assets/audio/parchment-flip.wav",
 ];
 
-/* =========================================
-   INSTALL (Kept your Individual Caching)
-========================================= */
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then(async (cache) => {
-      for (const asset of STATIC_ASSETS) {
-        try {
-          await cache.add(asset);
-        } catch (err) {
-          console.warn("[SW] Skipping non-existent asset:", asset);
+      // Use allSettled so one failing asset doesn't break the whole install on mobile
+      const results = await Promise.allSettled(
+        STATIC_ASSETS.map((asset) => cache.add(asset))
+      );
+      results.forEach((res, i) => {
+        if (res.status === "rejected") {
+          console.warn(`[SW] Failed to cache: ${STATIC_ASSETS[i]}`);
         }
-      }
+      });
     })
   );
   self.skipWaiting();
 });
 
-/* =========================================
-   ACTIVATE (Kept your Hardened Cleanup)
-========================================= */
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
@@ -48,7 +44,7 @@ self.addEventListener("activate", (event) => {
         Promise.all(
           keys
             .filter(
-              (key) => key.startsWith("hinsete-") && !key.endsWith(VERSION)
+              (key) => key.startsWith("hinsete-") && !key.includes(VERSION)
             )
             .map((key) => caches.delete(key))
         )
@@ -57,16 +53,12 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-/* =========================================
-   FETCH HANDLER (The "Persistence" Engine)
-========================================= */
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
 
-  // 1. BYPASS AUTH & API (Always Network)
   if (
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/auth") ||
@@ -75,8 +67,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2. PERSISTENT CONTENT: Navigation OR Next.js Data (_rsc)
-  // This ensures that when user read a chapter, the SW "steals" a copy for the cache.
   const isNavigation = request.mode === "navigate";
   const isNextData = url.search.includes("_rsc");
 
@@ -85,7 +75,6 @@ self.addEventListener("fetch", (event) => {
       fetch(request)
         .then((response) => {
           if (!response || response.status !== 200) return response;
-
           const clone = response.clone();
           event.waitUntil(
             caches
@@ -95,18 +84,14 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(async () => {
-          // If network fails, look for this specific page/data in the cache
           const cached = await caches.match(request);
           if (cached) return cached;
-
-          // If it's a new page and we have nothing, show offline fallback
           if (isNavigation) return caches.match("/offline.html");
         })
     );
     return;
   }
 
-  // 3. STATIC ASSETS (Cache First, then Network)
   if (
     ["image", "audio", "font", "style", "script"].includes(request.destination)
   ) {
@@ -128,5 +113,12 @@ self.addEventListener("fetch", (event) => {
       })
     );
     return;
+  }
+});
+
+// Listener for the "Update" action in the Modal
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
   }
 });
