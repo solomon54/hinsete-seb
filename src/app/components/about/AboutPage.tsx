@@ -105,10 +105,13 @@ export default function AboutPage() {
               ማሳሰቢያ (Disclaimer)
             </h2>
           </div>
-          <p className="text-xs text-red-900/70 leading-relaxed italic">
+          <p className="text-xs text-red-900/70 leading-relaxed italic ">
             • በዚህ መተግበሪያ ውስጥ የሚገኙ ይዘቶች የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮን የተከተሉ
             ናቸው። <br />• የግል ማስታወሻዎችዎ በስልክዎ ላይ ብቻ የሚቀመጡ በመሆኑ፤ መተግበሪያውን ሲያጠፉ
             (Uninstall) አብረው ሊጠፉ ስለሚችሉ ጥንቃቄ ያድርጉ።
+            <br />
+            •ገጾችን ለመገልትጥ ወይም ለመቀየር ከግራን እና ከቀኝ ጫፍ በመንካት ወይም በመሳብ ቀጣዩን ወይም የቀደመውን
+            ገጽ ማግኘት ይችላሉ።
           </p>
         </section>
 
