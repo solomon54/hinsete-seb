@@ -42,7 +42,6 @@
             max-width: 460px;
             width: 92%;
             padding: 2.5rem 1.5rem;
-            /* Balanced mobile padding */
             background: rgba(255, 252, 245, 0.98);
             border: 1px solid var(--accent);
             box-shadow:
@@ -76,7 +75,7 @@
             animation: pulse 1.5s infinite;
         }
 
-        /* Large High-Res Medallion */
+        /* Large High-Res Medallion with Sparse, Semi-Transparent Text */
         .image-medallion {
             width: 180px;
             height: 180px;
@@ -88,6 +87,20 @@
             outline-offset: 5px;
             box-shadow: 0 15px 35px rgba(155, 92, 18, 0.25);
             position: relative;
+
+            /* Centering logic */
+            display: flex;
+            align-items: end;
+            justify-content: center;
+
+            /* Text Aesthetic: Spaced and Transparent */
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 900;
+            font-size: 2.8rem;
+            letter-spacing: 0.4em;
+            padding-left: 0.4em;
+            text-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
         }
 
         h1 {
@@ -96,7 +109,6 @@
             margin: 0 0 1.5rem;
         }
 
-        /* Restored Wisdom Box with Quotes */
         .wisdom-box {
             background: rgba(185, 155, 107, 0.1);
             border-top: 1px solid var(--accent);
@@ -131,7 +143,6 @@
             line-height: 1.9;
         }
 
-        /* Button with Wavy Shimmer */
         .btn-retry {
             display: block;
             width: 100%;
@@ -213,6 +224,7 @@
             .image-medallion {
                 width: 160px;
                 height: 160px;
+                font-size: 2rem;
             }
 
             h1 {
@@ -237,7 +249,7 @@
             ግንኙነት ተቋርጧል
         </div>
 
-        <div class="image-medallion"></div>
+        <div class="image-medallion">እናት</div>
 
         <h1>ከመስመር ውጭ ነዎት</h1>
 
@@ -254,7 +266,6 @@
 
     <script>
         window.addEventListener('online', () => { window.location.href = '/'; });
-
         document.querySelector('.btn-retry').addEventListener('click', () => {
             if (navigator.vibrate) navigator.vibrate(15);
         });
