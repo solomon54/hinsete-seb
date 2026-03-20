@@ -321,7 +321,7 @@ export default function ThanksPage() {
                   </span>
                 </div>
               ))}
-              <span className="ml-96 text-[#d35400]"> ብለህ እራስህን ጠይቅ!</span>
+              <span className=" text-[#d35400]"> ብለህ እራስህን ጠይቅ!</span>
             </div>
 
             <div className="space-y-12 pt-10">
