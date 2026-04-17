@@ -45,7 +45,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#fdfaf1] text-[#3d1c1d] flex flex-col min-h-dvh`}>
         <ClientSecurity />
-        <InstallModal lessonProgress={lessonProgress} />
+        <InstallModal />
 
         <main className="flex-1 md:pl-24">{children}</main>
 
