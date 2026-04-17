@@ -44,6 +44,26 @@ export default function InstallModal({
     );
   }, []);
 
+  // install prompt can be delayed, so we check after a short timeout to catch it if it appears late
+  useEffect(() => {
+    const fallback = setTimeout(() => {
+      const alreadyTriggered = visible || mode !== null;
+      if (alreadyTriggered) return;
+
+      if (!isRunningStandalone()) {
+        if (installManager.canInstall()) {
+          setMode("install");
+          setVisible(true);
+        } else if (installManager.isIOS()) {
+          setMode("ios");
+          setVisible(true);
+        }
+      }
+    }, 5000);
+
+    return () => clearTimeout(fallback);
+  }, [visible, mode]);
+
   const fireCelebration = useCallback(() => {
     const end = Date.now() + 4000;
     const colors = ["#9b2d30", "#b99b6b", "#FFD700"];

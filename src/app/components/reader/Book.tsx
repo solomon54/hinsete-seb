@@ -11,6 +11,7 @@ import Notepad from "../notes/Notepad";
 import { useSearchParams } from "next/navigation";
 import { CoverPage } from "./CoverPage";
 import { GlossaryPage } from "./GlossaryPage";
+import { useRouter } from "next/navigation";
 
 interface BookProps {
   pages: any[];
@@ -35,6 +36,7 @@ export const Book = ({ pages, chapterId, onPageChange }: BookProps) => {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isRestoring = useRef(true);
+  const router = useRouter();
 
   // Count total action plans in chapter (used in BookPage probably)
   const totalActionsInChapter = useMemo(() => {
@@ -193,6 +195,15 @@ export const Book = ({ pages, chapterId, onPageChange }: BookProps) => {
 
   return (
     <div className="biranna-viewport fixed inset-0 flex items-center justify-center bg-[#2c2c2c]">
+      {/* Home Button (Desktop / Tablet only) */}
+      <button
+        onClick={() => router.push("/")}
+        className="hidden md:flex fixed top-3 left-3 z-9999 items-center justify-center
+    md:w-7 md:h-7 lg:w-12 lg:h-12 rounded-full bg-amber-500/25 text-[#9b2d30] shadow-lg border border-[#9b2d30]/20 hover:scale-105 active:scale-95 transition"
+        aria-label="Go to home">
+        🏠
+      </button>
+
       {/* Mute Toggle */}
       <button
         onClick={() => setIsMuted(!isMuted)}

@@ -25,7 +25,6 @@ interface EditorProps {
 export default function Editor({ content, onUpdate, editorRef }: EditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
-
     extensions: [
       StarterKit.configure({
         bulletList: { keepMarks: true },

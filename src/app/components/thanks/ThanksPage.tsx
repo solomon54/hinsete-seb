@@ -241,7 +241,7 @@ export default function ThanksPage() {
               <div className="space-y-8 text-[#2c1a11]/90 text-sm md:text-base italic leading-relaxed">
                 <p>
                   እንዴት ሰውን ከወደቀበት ማንሳት እንደሚቻል በሕይወቷ በተግባር ያረጋገጠችልን እህታችን ናት። በግቢ
-                  ጉባኤያችን ውስጥ የጥቂት ሰዎች "ጊዜያዊ እናት" ሆና ብትሰጠንም፤ ለእኔ ግን እውነተኛዋ የሕይወት
+                  ጉባኤያችን ውስጥ የጥቂት ሰዎች "ጊዜያዊ እናት" ሆና ብትሰጠንም፤ ለኔ ግን እውነተኛዋ የሕይወት
                   ትምህርት ቤቴ ነበረች። ለዚህም ነው አብዛኞቻችን ከሙሉ ስሟ ይልቅ “እማ” ወይም &nbsp;
                   “እናት” በማለት የምንጠራት።
                 </p>
@@ -301,7 +301,7 @@ export default function ThanksPage() {
                 ወንድማዊ ጥሪ
               </h2>
               <p className="text-sm md:text-base text-[#2c1a11]/80 max-w-3xl mx-auto leading-relaxed italic">
-                ውድ ወንድሜና እህቴ ሆይ፤ ከጀርባህ የብዙዎች ውለታና ጸሎት እንዳለ አትዘንጋ። ይህ መተግበሪያ
+                ውድ ወንድሜና እህቴ ሆይ፤ ከጀርባህ/ሽ የብዙዎች ውለታና ጸሎት እንዳለ አትዘንጋ። ይህ መተግበሪያ
                 አንተንም ለሌሎች መጽናኛና ተስፋ እንድትሆን ያነሳሳህ ዘንድ ምኞቴ ነው።
               </p>
             </div>
